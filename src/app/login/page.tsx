@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useI18n } from '@/lib/i18n';
@@ -21,7 +21,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -98,7 +98,7 @@ function LoginForm() {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              
+
               {successMessage && (
                 <Alert>
                   <AlertDescription>{successMessage}</AlertDescription>
@@ -167,7 +167,9 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <I18nProvider>
-      <LoginForm />
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+        <LoginForm />
+      </Suspense>
     </I18nProvider>
   );
 }
