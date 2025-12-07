@@ -11,7 +11,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, Loader2, Building2, Globe, CreditCard } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Save, Loader2, Building2, Globe, CreditCard, Settings2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Company {
   id: number;
@@ -28,6 +30,8 @@ interface Company {
   bankAccountNumber: string | null;
   bankIban: string | null;
   defaultCurrency: string;
+  defaultTaxRate: number;
+  paymentTermsDays: number;
 }
 
 function SettingsContent() {
@@ -35,7 +39,9 @@ function SettingsContent() {
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingPrefs, setSavingPrefs] = useState(false);
   const [formData, setFormData] = useState<Partial<Company>>({});
+  const [hasCompany, setHasCompany] = useState(false);
 
   useEffect(() => {
     fetchCompany();
@@ -43,11 +49,34 @@ function SettingsContent() {
 
   const fetchCompany = async () => {
     try {
-      const res = await fetch('/api/companies');
+      const token = localStorage.getItem('bearer_token');
+      const res = await fetch('/api/companies', {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
       const data = await res.json();
       if (Array.isArray(data) && data.length > 0) {
         setCompany(data[0]);
         setFormData(data[0]);
+        setHasCompany(true);
+      } else {
+        // Initialize empty form for new company
+        setFormData({
+          name: '',
+          nameUrdu: '',
+          ntnNumber: '',
+          strnNumber: '',
+          address: '',
+          city: '',
+          phone: '',
+          email: '',
+          bankName: '',
+          bankAccountNumber: '',
+          bankIban: '',
+          defaultCurrency: 'PKR',
+          defaultTaxRate: 17,
+          paymentTermsDays: 30,
+        });
+        setHasCompany(false);
       }
     } catch (error) {
       console.error('Failed to fetch:', error);
@@ -57,27 +86,85 @@ function SettingsContent() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: type === 'number' ? parseFloat(value) || 0 : value,
     }));
   };
 
   const handleSave = async () => {
-    if (!company) return;
+    if (!formData.name) {
+      toast.error('Company name is required');
+      return;
+    }
     
     setSaving(true);
     try {
-      await fetch(`/api/companies?id=${company.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      setCompany({ ...company, ...formData } as Company);
+      const token = localStorage.getItem('bearer_token');
+      
+      if (hasCompany && company) {
+        // Update existing company
+        await fetch(`/api/companies?id=${company.id}`, {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify(formData),
+        });
+        setCompany({ ...company, ...formData } as Company);
+        toast.success('Company settings saved successfully');
+      } else {
+        // Create new company
+        const res = await fetch('/api/companies', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            ...formData,
+            createdAt: new Date().toISOString(),
+          }),
+        });
+        const newCompany = await res.json();
+        setCompany(newCompany);
+        setHasCompany(true);
+        toast.success('Company created successfully! You can now create invoices and quotations.');
+      }
     } catch (error) {
       console.error('Save failed:', error);
+      toast.error('Failed to save settings');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSavePreferences = async () => {
+    if (!company) return;
+    
+    setSavingPrefs(true);
+    try {
+      const token = localStorage.getItem('bearer_token');
+      await fetch(`/api/companies?id=${company.id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          defaultTaxRate: formData.defaultTaxRate,
+          paymentTermsDays: formData.paymentTermsDays,
+        }),
+      });
+      setCompany({ ...company, defaultTaxRate: formData.defaultTaxRate!, paymentTermsDays: formData.paymentTermsDays! });
+      toast.success('Preferences saved successfully');
+    } catch (error) {
+      console.error('Save failed:', error);
+      toast.error('Failed to save preferences');
+    } finally {
+      setSavingPrefs(false);
     }
   };
 
@@ -92,6 +179,16 @@ function SettingsContent() {
 
   return (
     <div className="space-y-6 max-w-4xl">
+      {!hasCompany && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Welcome!</strong> Please fill in your company details below to start creating invoices and quotations. 
+            All fields should contain your actual business information.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Tabs defaultValue="company">
         <TabsList>
           <TabsTrigger value="company" className="gap-2">
@@ -99,8 +196,12 @@ function SettingsContent() {
             {t('companySettings')}
           </TabsTrigger>
           <TabsTrigger value="preferences" className="gap-2">
-            <Globe className="h-4 w-4" />
+            <Settings2 className="h-4 w-4" />
             Preferences
+          </TabsTrigger>
+          <TabsTrigger value="language" className="gap-2">
+            <Globe className="h-4 w-4" />
+            Language
           </TabsTrigger>
         </TabsList>
 
@@ -110,18 +211,19 @@ function SettingsContent() {
             <CardHeader>
               <CardTitle>{t('companySettings')}</CardTitle>
               <CardDescription>
-                Update your company details for invoices and quotations
+                Enter your company details. This information will appear on all invoices and quotations.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">{t('companyName')} (English)</Label>
+                  <Label htmlFor="name">{t('companyName')} (English) *</Label>
                   <Input
                     id="name"
                     name="name"
                     value={formData.name || ''}
                     onChange={handleChange}
+                    placeholder="Enter your company name"
                   />
                 </div>
                 <div className="space-y-2">
@@ -132,6 +234,7 @@ function SettingsContent() {
                     value={formData.nameUrdu || ''}
                     onChange={handleChange}
                     dir="rtl"
+                    placeholder="اپنی کمپنی کا نام درج کریں"
                   />
                 </div>
               </div>
@@ -144,7 +247,7 @@ function SettingsContent() {
                     name="ntnNumber"
                     value={formData.ntnNumber || ''}
                     onChange={handleChange}
-                    placeholder="1234567-8"
+                    placeholder="Enter your NTN number (e.g., 1234567-8)"
                   />
                 </div>
                 <div className="space-y-2">
@@ -154,7 +257,7 @@ function SettingsContent() {
                     name="strnNumber"
                     value={formData.strnNumber || ''}
                     onChange={handleChange}
-                    placeholder="08-00-1234-567-89"
+                    placeholder="Enter your STRN number"
                   />
                 </div>
               </div>
@@ -167,6 +270,7 @@ function SettingsContent() {
                   value={formData.address || ''}
                   onChange={handleChange}
                   rows={2}
+                  placeholder="Enter your business address"
                 />
               </div>
 
@@ -178,6 +282,7 @@ function SettingsContent() {
                     name="city"
                     value={formData.city || ''}
                     onChange={handleChange}
+                    placeholder="Enter city"
                   />
                 </div>
                 <div className="space-y-2">
@@ -187,6 +292,7 @@ function SettingsContent() {
                     name="phone"
                     value={formData.phone || ''}
                     onChange={handleChange}
+                    placeholder="Enter phone number"
                   />
                 </div>
                 <div className="space-y-2">
@@ -197,6 +303,7 @@ function SettingsContent() {
                     type="email"
                     value={formData.email || ''}
                     onChange={handleChange}
+                    placeholder="Enter business email"
                   />
                 </div>
               </div>
@@ -209,6 +316,9 @@ function SettingsContent() {
                   <CreditCard className="h-5 w-5" />
                   {t('bankDetails')}
                 </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Bank details will be displayed on invoices for easy payment reference.
+                </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="bankName">{t('bankName')}</Label>
@@ -217,7 +327,7 @@ function SettingsContent() {
                       name="bankName"
                       value={formData.bankName || ''}
                       onChange={handleChange}
-                      placeholder="Habib Bank Limited"
+                      placeholder="Enter your bank name"
                     />
                   </div>
                   <div className="space-y-2">
@@ -227,6 +337,7 @@ function SettingsContent() {
                       name="bankAccountNumber"
                       value={formData.bankAccountNumber || ''}
                       onChange={handleChange}
+                      placeholder="Enter account number"
                     />
                   </div>
                   <div className="space-y-2 md:col-span-2">
@@ -236,7 +347,7 @@ function SettingsContent() {
                       name="bankIban"
                       value={formData.bankIban || ''}
                       onChange={handleChange}
-                      placeholder="PK36HABB0000001234567890"
+                      placeholder="Enter IBAN (e.g., PK36HABB0000001234567890)"
                     />
                   </div>
                 </div>
@@ -246,7 +357,7 @@ function SettingsContent() {
                 <Button onClick={handleSave} disabled={saving}>
                   {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   <Save className="h-4 w-4 mr-2" />
-                  {t('save')}
+                  {hasCompany ? t('save') : 'Create Company'}
                 </Button>
               </div>
             </CardContent>
@@ -254,39 +365,83 @@ function SettingsContent() {
         </TabsContent>
 
         <TabsContent value="preferences" className="space-y-6">
-          {/* Language Settings */}
+          {/* Invoice Defaults */}
           <Card>
             <CardHeader>
-              <CardTitle>Language / زبان</CardTitle>
+              <CardTitle>Invoice & Quotation Defaults</CardTitle>
               <CardDescription>
-                Choose your preferred language for the application
+                Configure default settings for new invoices and quotations. You can override these values when creating individual documents.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="flex gap-4">
-                <Button
-                  variant={language === 'en' ? 'default' : 'outline'}
-                  onClick={() => setLanguage('en')}
-                  className="flex-1"
-                >
-                  <Globe className="h-4 w-4 mr-2" />
-                  English
-                </Button>
-                <Button
-                  variant={language === 'ur' ? 'default' : 'outline'}
-                  onClick={() => setLanguage('ur')}
-                  className="flex-1"
-                  dir="rtl"
-                >
-                  <Globe className="h-4 w-4 ml-2" />
-                  اردو
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="defaultTaxRate">Default Tax Rate (%)</Label>
+                    <Input
+                      id="defaultTaxRate"
+                      name="defaultTaxRate"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      value={formData.defaultTaxRate ?? 17}
+                      onChange={handleChange}
+                      placeholder="17"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Standard GST rate in Pakistan is 17%. This will be applied to new line items.
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="paymentTermsDays">Payment Terms (Days)</Label>
+                    <Input
+                      id="paymentTermsDays"
+                      name="paymentTermsDays"
+                      type="number"
+                      min="0"
+                      max="365"
+                      value={formData.paymentTermsDays ?? 30}
+                      onChange={handleChange}
+                      placeholder="30"
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Number of days until invoice is due. Due date will be calculated automatically.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Preview */}
+              <div className="border rounded-lg p-4 bg-muted/50">
+                <h4 className="font-medium mb-3">Preview</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="p-3 bg-background rounded border">
+                    <p className="text-muted-foreground">Default Tax Rate</p>
+                    <p className="text-2xl font-bold">{formData.defaultTaxRate ?? 17}%</p>
+                  </div>
+                  <div className="p-3 bg-background rounded border">
+                    <p className="text-muted-foreground">Payment Due In</p>
+                    <p className="text-2xl font-bold">{formData.paymentTermsDays ?? 30} days</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button onClick={handleSavePreferences} disabled={savingPrefs || !hasCompany}>
+                  {savingPrefs && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Preferences
                 </Button>
               </div>
-              <p className="text-sm text-muted-foreground mt-4">
-                {language === 'ur' 
-                  ? 'اردو میں انوائس اور رپورٹس دکھائی جائیں گی۔ دائیں سے بائیں لے آؤٹ استعمال ہوگا۔'
-                  : 'Invoices and reports will be displayed in English. Left-to-right layout will be used.'}
-              </p>
+              
+              {!hasCompany && (
+                <p className="text-sm text-muted-foreground text-center">
+                  Please save your company details first before updating preferences.
+                </p>
+              )}
             </CardContent>
           </Card>
 
@@ -312,28 +467,44 @@ function SettingsContent() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
 
-          {/* Invoice Settings */}
+        <TabsContent value="language" className="space-y-6">
+          {/* Language Settings */}
           <Card>
             <CardHeader>
-              <CardTitle>Invoice Defaults</CardTitle>
+              <CardTitle>Language / زبان</CardTitle>
               <CardDescription>
-                Default settings for new invoices
+                Choose your preferred language for the application
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 border rounded-lg">
-                  <p className="font-medium">Default Tax Rate</p>
-                  <p className="text-2xl font-bold">17%</p>
-                  <p className="text-sm text-muted-foreground">Standard GST rate in Pakistan</p>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <p className="font-medium">Payment Terms</p>
-                  <p className="text-2xl font-bold">30 days</p>
-                  <p className="text-sm text-muted-foreground">Default invoice due period</p>
-                </div>
+            <CardContent>
+              <div className="flex gap-4">
+                <Button
+                  variant={language === 'en' ? 'default' : 'outline'}
+                  onClick={() => setLanguage('en')}
+                  className="flex-1"
+                >
+                  <Globe className="h-4 w-4 mr-2" />
+                  English
+                  {language === 'en' && <CheckCircle2 className="h-4 w-4 ml-2" />}
+                </Button>
+                <Button
+                  variant={language === 'ur' ? 'default' : 'outline'}
+                  onClick={() => setLanguage('ur')}
+                  className="flex-1"
+                  dir="rtl"
+                >
+                  <Globe className="h-4 w-4 ml-2" />
+                  اردو
+                  {language === 'ur' && <CheckCircle2 className="h-4 w-4 mr-2" />}
+                </Button>
               </div>
+              <p className="text-sm text-muted-foreground mt-4">
+                {language === 'ur' 
+                  ? 'اردو میں انوائس اور رپورٹس دکھائی جائیں گی۔ دائیں سے بائیں لے آؤٹ استعمال ہوگا۔'
+                  : 'Invoices and reports will be displayed in English. Left-to-right layout will be used.'}
+              </p>
             </CardContent>
           </Card>
         </TabsContent>

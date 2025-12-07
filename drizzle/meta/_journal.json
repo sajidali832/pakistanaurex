@@ -15,6 +15,13 @@
       "when": 1765055310946,
       "tag": "0001_organic_meltdown",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1765098879153,
+      "tag": "0002_dusty_silhouette",
+      "breakpoints": true
     }
   ]
 }

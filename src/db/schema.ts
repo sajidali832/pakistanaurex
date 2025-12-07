@@ -82,6 +82,8 @@ export const companies = sqliteTable('companies', {
   bankAccountNumber: text('bank_account_number'),
   bankIban: text('bank_iban'),
   defaultCurrency: text('default_currency').notNull().default('PKR'),
+  defaultTaxRate: real('default_tax_rate').notNull().default(17),
+  paymentTermsDays: integer('payment_terms_days').notNull().default(30),
   createdAt: text('created_at').notNull(),
 });
 

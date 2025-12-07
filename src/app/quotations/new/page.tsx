@@ -27,6 +27,7 @@ import {
   TableFooter,
 } from '@/components/ui/table';
 import { Plus, Trash2, Save, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Client {
   id: number;
@@ -40,6 +41,12 @@ interface Item {
   nameUrdu: string | null;
   unitPrice: number;
   taxRate: number;
+}
+
+interface Company {
+  id: number;
+  defaultTaxRate: number;
+  paymentTermsDays: number;
 }
 
 interface LineItem {
@@ -60,6 +67,7 @@ function NewQuotationContent() {
   
   const [clients, setClients] = useState<Client[]>([]);
   const [items, setItems] = useState<Item[]>([]);
+  const [companySettings, setCompanySettings] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
@@ -68,36 +76,70 @@ function NewQuotationContent() {
   const [issueDate, setIssueDate] = useState(new Date().toISOString().split('T')[0]);
   const [validUntil, setValidUntil] = useState('');
   const [notes, setNotes] = useState('');
-  const [terms, setTerms] = useState('Valid for 15 days. Payment due within 30 days of acceptance.');
+  const [terms, setTerms] = useState('');
   const [discountAmount, setDiscountAmount] = useState(0);
   
-  const [lineItems, setLineItems] = useState<LineItem[]>([
-    { id: '1', itemId: null, description: '', quantity: 1, unitPrice: 0, taxRate: 17, taxAmount: 0, lineTotal: 0 }
-  ]);
+  const [lineItems, setLineItems] = useState<LineItem[]>([]);
 
   useEffect(() => {
     if (companyId) {
       fetchData();
     }
     generateQuotationNumber();
-    setDefaultValidUntil();
   }, [companyId]);
 
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('bearer_token');
-      const [clientsRes, itemsRes] = await Promise.all([
+      const [clientsRes, itemsRes, companiesRes] = await Promise.all([
         fetch('/api/clients', {
           headers: { 'Authorization': `Bearer ${token}` },
         }),
         fetch('/api/items', {
           headers: { 'Authorization': `Bearer ${token}` },
         }),
+        fetch('/api/companies', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
       ]);
       const clientsData = await clientsRes.json();
       const itemsData = await itemsRes.json();
+      const companiesData = await companiesRes.json();
+      
       setClients(Array.isArray(clientsData) ? clientsData : []);
       setItems(Array.isArray(itemsData) ? itemsData : []);
+      
+      // Get company settings for defaults
+      if (Array.isArray(companiesData) && companiesData.length > 0) {
+        const company = companiesData[0];
+        setCompanySettings(company);
+        
+        // Set default tax rate from company settings
+        const defaultTaxRate = company.defaultTaxRate ?? 17;
+        const paymentTermsDays = company.paymentTermsDays ?? 30;
+        
+        // Set default valid until (15 days from now)
+        const validUntilDate = new Date();
+        validUntilDate.setDate(validUntilDate.getDate() + 15);
+        setValidUntil(validUntilDate.toISOString().split('T')[0]);
+        
+        // Set default terms
+        setTerms(`Valid for 15 days. Payment due within ${paymentTermsDays} days of acceptance.`);
+        
+        // Initialize line items with company's default tax rate
+        setLineItems([
+          { id: '1', itemId: null, description: '', quantity: 1, unitPrice: 0, taxRate: defaultTaxRate, taxAmount: 0, lineTotal: 0 }
+        ]);
+      } else {
+        // Fallback defaults
+        const validUntilDate = new Date();
+        validUntilDate.setDate(validUntilDate.getDate() + 15);
+        setValidUntil(validUntilDate.toISOString().split('T')[0]);
+        setTerms('Valid for 15 days. Payment due within 30 days of acceptance.');
+        setLineItems([
+          { id: '1', itemId: null, description: '', quantity: 1, unitPrice: 0, taxRate: 17, taxAmount: 0, lineTotal: 0 }
+        ]);
+      }
     } catch (error) {
       console.error('Failed to fetch:', error);
     } finally {
@@ -109,12 +151,6 @@ function NewQuotationContent() {
     const year = new Date().getFullYear();
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     setQuotationNumber(`QT-${year}-${random}`);
-  };
-
-  const setDefaultValidUntil = () => {
-    const date = new Date();
-    date.setDate(date.getDate() + 15);
-    setValidUntil(date.toISOString().split('T')[0]);
   };
 
   const calculateLineItem = (item: LineItem): LineItem => {
@@ -135,9 +171,10 @@ function NewQuotationContent() {
   };
 
   const addLineItem = () => {
+    const defaultTaxRate = companySettings?.defaultTaxRate ?? 17;
     setLineItems([
       ...lineItems,
-      { id: Date.now().toString(), itemId: null, description: '', quantity: 1, unitPrice: 0, taxRate: 17, taxAmount: 0, lineTotal: 0 }
+      { id: Date.now().toString(), itemId: null, description: '', quantity: 1, unitPrice: 0, taxRate: defaultTaxRate, taxAmount: 0, lineTotal: 0 }
     ]);
   };
 
@@ -158,7 +195,7 @@ function NewQuotationContent() {
             itemId: selectedItem.id,
             description: language === 'ur' && selectedItem.nameUrdu ? selectedItem.nameUrdu : selectedItem.name,
             unitPrice: selectedItem.unitPrice,
-            taxRate: selectedItem.taxRate,
+            taxRate: selectedItem.taxRate || companySettings?.defaultTaxRate || 17,
           };
           return calculateLineItem(updated);
         })
@@ -171,7 +208,10 @@ function NewQuotationContent() {
   const total = subtotal + taxAmount - discountAmount;
 
   const handleSave = async (status: string = 'draft') => {
-    if (!clientId || !quotationNumber || !companyId) return;
+    if (!clientId || !quotationNumber || !companyId) {
+      toast.error('Please select a client and enter quotation number');
+      return;
+    }
     
     setSaving(true);
     try {
@@ -225,9 +265,11 @@ function NewQuotationContent() {
         });
       }
 
+      toast.success('Quotation created successfully');
       router.push('/quotations');
     } catch (error) {
       console.error('Save failed:', error);
+      toast.error('Failed to create quotation');
     } finally {
       setSaving(false);
     }

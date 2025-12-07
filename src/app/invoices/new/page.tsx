@@ -27,6 +27,7 @@ import {
   TableFooter,
 } from '@/components/ui/table';
 import { Plus, Trash2, Save, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Client {
   id: number;
@@ -40,6 +41,12 @@ interface Item {
   nameUrdu: string | null;
   unitPrice: number;
   taxRate: number;
+}
+
+interface Company {
+  id: number;
+  defaultTaxRate: number;
+  paymentTermsDays: number;
 }
 
 interface LineItem {
@@ -60,6 +67,7 @@ function NewInvoiceContent() {
   
   const [clients, setClients] = useState<Client[]>([]);
   const [items, setItems] = useState<Item[]>([]);
+  const [companySettings, setCompanySettings] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
@@ -68,12 +76,10 @@ function NewInvoiceContent() {
   const [issueDate, setIssueDate] = useState(new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState('');
   const [notes, setNotes] = useState('');
-  const [terms, setTerms] = useState('Payment due within 30 days');
+  const [terms, setTerms] = useState('');
   const [discountAmount, setDiscountAmount] = useState(0);
   
-  const [lineItems, setLineItems] = useState<LineItem[]>([
-    { id: '1', itemId: null, description: '', quantity: 1, unitPrice: 0, taxRate: 17, taxAmount: 0, lineTotal: 0 }
-  ]);
+  const [lineItems, setLineItems] = useState<LineItem[]>([]);
 
   useEffect(() => {
     if (companyId) {
@@ -85,18 +91,55 @@ function NewInvoiceContent() {
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('bearer_token');
-      const [clientsRes, itemsRes] = await Promise.all([
+      const [clientsRes, itemsRes, companiesRes] = await Promise.all([
         fetch('/api/clients', {
           headers: { 'Authorization': `Bearer ${token}` },
         }),
         fetch('/api/items', {
           headers: { 'Authorization': `Bearer ${token}` },
         }),
+        fetch('/api/companies', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
       ]);
       const clientsData = await clientsRes.json();
       const itemsData = await itemsRes.json();
+      const companiesData = await companiesRes.json();
+      
       setClients(Array.isArray(clientsData) ? clientsData : []);
       setItems(Array.isArray(itemsData) ? itemsData : []);
+      
+      // Get company settings for defaults
+      if (Array.isArray(companiesData) && companiesData.length > 0) {
+        const company = companiesData[0];
+        setCompanySettings(company);
+        
+        // Set default tax rate and payment terms from company settings
+        const defaultTaxRate = company.defaultTaxRate ?? 17;
+        const paymentTermsDays = company.paymentTermsDays ?? 30;
+        
+        // Set default due date based on payment terms
+        const dueDateObj = new Date();
+        dueDateObj.setDate(dueDateObj.getDate() + paymentTermsDays);
+        setDueDate(dueDateObj.toISOString().split('T')[0]);
+        
+        // Set default terms
+        setTerms(`Payment due within ${paymentTermsDays} days`);
+        
+        // Initialize line items with company's default tax rate
+        setLineItems([
+          { id: '1', itemId: null, description: '', quantity: 1, unitPrice: 0, taxRate: defaultTaxRate, taxAmount: 0, lineTotal: 0 }
+        ]);
+      } else {
+        // Fallback defaults
+        const dueDateObj = new Date();
+        dueDateObj.setDate(dueDateObj.getDate() + 30);
+        setDueDate(dueDateObj.toISOString().split('T')[0]);
+        setTerms('Payment due within 30 days');
+        setLineItems([
+          { id: '1', itemId: null, description: '', quantity: 1, unitPrice: 0, taxRate: 17, taxAmount: 0, lineTotal: 0 }
+        ]);
+      }
     } catch (error) {
       console.error('Failed to fetch:', error);
     } finally {
@@ -128,9 +171,10 @@ function NewInvoiceContent() {
   };
 
   const addLineItem = () => {
+    const defaultTaxRate = companySettings?.defaultTaxRate ?? 17;
     setLineItems([
       ...lineItems,
-      { id: Date.now().toString(), itemId: null, description: '', quantity: 1, unitPrice: 0, taxRate: 17, taxAmount: 0, lineTotal: 0 }
+      { id: Date.now().toString(), itemId: null, description: '', quantity: 1, unitPrice: 0, taxRate: defaultTaxRate, taxAmount: 0, lineTotal: 0 }
     ]);
   };
 
@@ -151,7 +195,7 @@ function NewInvoiceContent() {
             itemId: selectedItem.id,
             description: language === 'ur' && selectedItem.nameUrdu ? selectedItem.nameUrdu : selectedItem.name,
             unitPrice: selectedItem.unitPrice,
-            taxRate: selectedItem.taxRate,
+            taxRate: selectedItem.taxRate || companySettings?.defaultTaxRate || 17,
           };
           return calculateLineItem(updated);
         })
@@ -164,7 +208,10 @@ function NewInvoiceContent() {
   const total = subtotal + taxAmount - discountAmount;
 
   const handleSave = async (status: string = 'draft') => {
-    if (!clientId || !invoiceNumber || !companyId) return;
+    if (!clientId || !invoiceNumber || !companyId) {
+      toast.error('Please select a client and enter invoice number');
+      return;
+    }
     
     setSaving(true);
     try {
@@ -220,9 +267,11 @@ function NewInvoiceContent() {
         });
       }
 
+      toast.success('Invoice created successfully');
       router.push('/invoices');
     } catch (error) {
       console.error('Save failed:', error);
+      toast.error('Failed to create invoice');
     } finally {
       setSaving(false);
     }

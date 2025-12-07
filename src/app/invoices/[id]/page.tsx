@@ -11,13 +11,19 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-  TableFooter,
 } from '@/components/ui/table';
 import {
   DropdownMenu,
@@ -25,7 +31,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ArrowLeft, Edit, Printer, Download, MoreHorizontal, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Edit, Printer, Download, MoreHorizontal, CheckCircle, XCircle, Palette, FileText } from 'lucide-react';
+import { invoiceTemplates, ClassicTemplate, ModernTemplate, BoldTemplate } from '@/components/InvoiceTemplates';
 
 interface Invoice {
   id: number;
@@ -90,17 +97,28 @@ function InvoiceDetailContent({ id }: { id: string }) {
   const [client, setClient] = useState<Client | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedTemplate, setSelectedTemplate] = useState('classic');
 
   useEffect(() => {
     fetchData();
+    // Load saved template preference
+    const savedTemplate = localStorage.getItem('invoice_template');
+    if (savedTemplate) setSelectedTemplate(savedTemplate);
   }, [id]);
 
   const fetchData = async () => {
     try {
+      const token = localStorage.getItem('bearer_token');
       const [invoiceRes, linesRes, companiesRes] = await Promise.all([
-        fetch(`/api/invoices?id=${id}`),
-        fetch(`/api/invoice-lines?invoiceId=${id}`),
-        fetch('/api/companies'),
+        fetch(`/api/invoices?id=${id}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
+        fetch(`/api/invoice-lines?invoiceId=${id}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
+        fetch('/api/companies', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        }),
       ]);
 
       const invoiceData = await invoiceRes.json();
@@ -112,7 +130,9 @@ function InvoiceDetailContent({ id }: { id: string }) {
       setCompany(Array.isArray(companiesData) ? companiesData[0] : null);
 
       if (invoiceData?.clientId) {
-        const clientRes = await fetch(`/api/clients?id=${invoiceData.clientId}`);
+        const clientRes = await fetch(`/api/clients?id=${invoiceData.clientId}`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
         const clientData = await clientRes.json();
         setClient(clientData);
       }
@@ -125,9 +145,13 @@ function InvoiceDetailContent({ id }: { id: string }) {
 
   const updateStatus = async (status: string) => {
     try {
+      const token = localStorage.getItem('bearer_token');
       await fetch(`/api/invoices?id=${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({ status }),
       });
       setInvoice(prev => prev ? { ...prev, status } : null);
@@ -140,6 +164,11 @@ function InvoiceDetailContent({ id }: { id: string }) {
     window.print();
   };
 
+  const handleTemplateChange = (template: string) => {
+    setSelectedTemplate(template);
+    localStorage.setItem('invoice_template', template);
+  };
+
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
       draft: { variant: 'secondary', label: t('draft') },
@@ -150,6 +179,21 @@ function InvoiceDetailContent({ id }: { id: string }) {
     };
     const config = statusConfig[status] || { variant: 'secondary' as const, label: status };
     return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
+  const renderTemplate = () => {
+    if (!invoice || !client || !company) return null;
+
+    const props = { invoice, lines, client, company, language };
+
+    switch (selectedTemplate) {
+      case 'modern':
+        return <ModernTemplate {...props} />;
+      case 'bold':
+        return <BoldTemplate {...props} />;
+      default:
+        return <ClassicTemplate {...props} />;
+    }
   };
 
   if (loading) {
@@ -177,18 +221,35 @@ function InvoiceDetailContent({ id }: { id: string }) {
   }
 
   return (
-    <div className="space-y-4 max-w-4xl mx-auto">
+    <div className="space-y-4 max-w-5xl mx-auto">
       {/* Actions Bar */}
-      <div className="flex justify-between items-center print:hidden">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden">
         <Button variant="ghost" onClick={() => router.push('/invoices')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           {t('invoices')}
         </Button>
-        <div className="flex gap-2">
-          <Link href={`/invoices/${id}/edit`}>
+        <div className="flex flex-wrap gap-2 items-center">
+          {/* Template Selector */}
+          <div className="flex items-center gap-2">
+            <Palette className="h-4 w-4 text-muted-foreground" />
+            <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select template" />
+              </SelectTrigger>
+              <SelectContent>
+                {invoiceTemplates.map((template) => (
+                  <SelectItem key={template.id} value={template.id}>
+                    {template.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <Link href={`/invoices/${id}/export`}>
             <Button variant="outline">
-              <Edit className="h-4 w-4 mr-2" />
-              {t('edit')}
+              <Download className="h-4 w-4 mr-2" />
+              {t('download')}
             </Button>
           </Link>
           <Button variant="outline" onClick={handlePrint}>
@@ -207,6 +268,7 @@ function InvoiceDetailContent({ id }: { id: string }) {
                 Mark as Paid
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => updateStatus('sent')}>
+                <FileText className="h-4 w-4 mr-2" />
                 Mark as Sent
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => updateStatus('cancelled')}>
@@ -218,158 +280,16 @@ function InvoiceDetailContent({ id }: { id: string }) {
         </div>
       </div>
 
-      {/* Invoice Document */}
-      <Card className="print:shadow-none print:border-none">
-        <CardContent className="p-8">
-          {/* Header */}
-          <div className="flex justify-between items-start mb-8">
-            <div>
-              <h1 className="text-3xl font-bold mb-1">
-                {language === 'ur' && company?.nameUrdu ? company.nameUrdu : company?.name}
-              </h1>
-              <p className="text-muted-foreground">{company?.address}</p>
-              <p className="text-muted-foreground">{company?.city}</p>
-              <p className="text-muted-foreground">{company?.phone}</p>
-              <p className="text-muted-foreground">{company?.email}</p>
-              {company?.ntnNumber && <p className="text-sm">NTN: {company.ntnNumber}</p>}
-              {company?.strnNumber && <p className="text-sm">STRN: {company.strnNumber}</p>}
-            </div>
-            <div className="text-right">
-              <h2 className="text-2xl font-bold text-primary mb-2">INVOICE</h2>
-              <p className="font-medium">{invoice.invoiceNumber}</p>
-              {getStatusBadge(invoice.status)}
-            </div>
-          </div>
+      {/* Status Badge */}
+      <div className="flex items-center gap-2 print:hidden">
+        <span className="text-sm text-muted-foreground">Status:</span>
+        {getStatusBadge(invoice.status)}
+      </div>
 
-          <Separator className="mb-8" />
-
-          {/* Client & Dates */}
-          <div className="grid grid-cols-2 gap-8 mb-8">
-            <div>
-              <h3 className="font-semibold text-sm text-muted-foreground mb-2">BILL TO</h3>
-              <p className="font-medium">
-                {language === 'ur' && client?.nameUrdu ? client.nameUrdu : client?.name}
-              </p>
-              <p className="text-muted-foreground">{client?.address}</p>
-              <p className="text-muted-foreground">{client?.city}</p>
-              <p className="text-muted-foreground">{client?.phone}</p>
-              {client?.ntnNumber && <p className="text-sm">NTN: {client.ntnNumber}</p>}
-            </div>
-            <div className="text-right space-y-1">
-              <div>
-                <span className="text-muted-foreground">{t('issueDate')}: </span>
-                <span className="font-medium">{formatDate(invoice.issueDate, language)}</span>
-              </div>
-              {invoice.dueDate && (
-                <div>
-                  <span className="text-muted-foreground">{t('dueDate')}: </span>
-                  <span className="font-medium">{formatDate(invoice.dueDate, language)}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Line Items */}
-          <Table className="mb-8">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">#</TableHead>
-                <TableHead>{t('description')}</TableHead>
-                <TableHead className="text-right">{t('quantity')}</TableHead>
-                <TableHead className="text-right">{t('unitPrice')}</TableHead>
-                <TableHead className="text-right">{t('tax')}</TableHead>
-                <TableHead className="text-right">{t('total')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {lines.map((line, index) => (
-                <TableRow key={line.id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{line.description}</TableCell>
-                  <TableCell className="text-right">{line.quantity}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(line.unitPrice, language)}</TableCell>
-                  <TableCell className="text-right">{line.taxRate}%</TableCell>
-                  <TableCell className="text-right">{formatCurrency(line.lineTotal, language)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          {/* Totals */}
-          <div className="flex justify-end mb-8">
-            <div className="w-72 space-y-2">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t('subtotal')}</span>
-                <span>{formatCurrency(invoice.subtotal, language)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t('tax')}</span>
-                <span>{formatCurrency(invoice.taxAmount, language)}</span>
-              </div>
-              {invoice.discountAmount > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t('discount')}</span>
-                  <span>-{formatCurrency(invoice.discountAmount, language)}</span>
-                </div>
-              )}
-              <Separator />
-              <div className="flex justify-between text-lg font-bold">
-                <span>{t('grandTotal')}</span>
-                <span>{formatCurrency(invoice.total, language)}</span>
-              </div>
-              {invoice.amountPaid > 0 && (
-                <>
-                  <div className="flex justify-between text-green-600">
-                    <span>Amount Paid</span>
-                    <span>{formatCurrency(invoice.amountPaid, language)}</span>
-                  </div>
-                  <div className="flex justify-between font-semibold">
-                    <span>Balance Due</span>
-                    <span>{formatCurrency(invoice.total - invoice.amountPaid, language)}</span>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Bank Details */}
-          {company && (
-            <div className="bg-muted p-4 rounded-lg mb-6">
-              <h3 className="font-semibold mb-2">{t('bankDetails')}</h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-muted-foreground">{t('bankName')}: </span>
-                  <span>{company.bankName}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">{t('accountNumber')}: </span>
-                  <span>{company.bankAccountNumber}</span>
-                </div>
-                <div className="col-span-2">
-                  <span className="text-muted-foreground">{t('iban')}: </span>
-                  <span>{company.bankIban}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Notes & Terms */}
-          {(invoice.notes || invoice.terms) && (
-            <div className="grid grid-cols-2 gap-8 text-sm">
-              {invoice.notes && (
-                <div>
-                  <h3 className="font-semibold mb-1">{t('notes')}</h3>
-                  <p className="text-muted-foreground whitespace-pre-wrap">{invoice.notes}</p>
-                </div>
-              )}
-              {invoice.terms && (
-                <div>
-                  <h3 className="font-semibold mb-1">{t('terms')}</h3>
-                  <p className="text-muted-foreground whitespace-pre-wrap">{invoice.terms}</p>
-                </div>
-              )}
-            </div>
-          )}
+      {/* Invoice Document with Selected Template */}
+      <Card className="print:shadow-none print:border-none overflow-hidden">
+        <CardContent className="p-0 print:p-0">
+          {renderTemplate()}
         </CardContent>
       </Card>
     </div>
