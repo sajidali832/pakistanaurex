@@ -14,7 +14,7 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true
 	},
-	trustedOrigins: ["https://aurexcompany1.vercel.app", "http://localhost:3000"],
+	trustedOrigins: ["https://aurexcompany1.vercel.app", "https://pakistanaurex.vercel.app", "http://localhost:3000"],
 	plugins: [bearer()]
 });
 
