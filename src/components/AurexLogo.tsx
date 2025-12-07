@@ -28,18 +28,6 @@ export function AurexLogo({ size = 'md', variant = 'full', className = '' }: Aur
         xmlns="http://www.w3.org/2000/svg"
         className="flex-shrink-0"
       >
-        {/* Background gradient circle */}
-        <defs>
-          <linearGradient id="aurexGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="hsl(var(--primary))" />
-            <stop offset="100%" stopColor="hsl(var(--primary) / 0.8)" />
-          </linearGradient>
-          <linearGradient id="aurexAccent" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="hsl(var(--primary-foreground))" />
-            <stop offset="100%" stopColor="hsl(var(--primary-foreground) / 0.9)" />
-          </linearGradient>
-        </defs>
-        
         {/* Main circle background */}
         <rect
           x="2"
@@ -47,23 +35,23 @@ export function AurexLogo({ size = 'md', variant = 'full', className = '' }: Aur
           width="44"
           height="44"
           rx="12"
-          fill="url(#aurexGradient)"
+          className="fill-primary"
         />
         
         {/* Stylized "A" mark */}
         <path
           d="M24 10L12 38H18L20 33H28L30 38H36L24 10Z"
-          fill="url(#aurexAccent)"
+          className="fill-primary-foreground"
         />
         <path
           d="M21.5 28L24 20L26.5 28H21.5Z"
-          fill="url(#aurexGradient)"
+          className="fill-primary"
         />
         
         {/* Accent line representing exchange/transaction */}
         <path
           d="M14 22H20M28 22H34"
-          stroke="url(#aurexAccent)"
+          className="stroke-primary-foreground"
           strokeWidth="2"
           strokeLinecap="round"
         />
@@ -88,38 +76,27 @@ export function AurexLogoMark({ size = 32, className = '' }: { size?: number; cl
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      <defs>
-        <linearGradient id="aurexGradientMark" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="hsl(var(--primary))" />
-          <stop offset="100%" stopColor="hsl(var(--primary) / 0.8)" />
-        </linearGradient>
-        <linearGradient id="aurexAccentMark" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="hsl(var(--primary-foreground))" />
-          <stop offset="100%" stopColor="hsl(var(--primary-foreground) / 0.9)" />
-        </linearGradient>
-      </defs>
-      
       <rect
         x="2"
         y="2"
         width="44"
         height="44"
         rx="12"
-        fill="url(#aurexGradientMark)"
+        className="fill-primary"
       />
       
       <path
         d="M24 10L12 38H18L20 33H28L30 38H36L24 10Z"
-        fill="url(#aurexAccentMark)"
+        className="fill-primary-foreground"
       />
       <path
         d="M21.5 28L24 20L26.5 28H21.5Z"
-        fill="url(#aurexGradientMark)"
+        className="fill-primary"
       />
       
       <path
         d="M14 22H20M28 22H34"
-        stroke="url(#aurexAccentMark)"
+        className="stroke-primary-foreground"
         strokeWidth="2"
         strokeLinecap="round"
       />
