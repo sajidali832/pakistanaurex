@@ -111,7 +111,6 @@ function RegisterForm() {
                 <Input
                   id="name"
                   type="text"
-                  placeholder="Your full name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -124,7 +123,6 @@ function RegisterForm() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="name@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -137,7 +135,6 @@ function RegisterForm() {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -152,7 +149,6 @@ function RegisterForm() {
                 <Input
                   id="confirmPassword"
                   type="password"
-                  placeholder="••••••••"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
