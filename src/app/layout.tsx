@@ -6,8 +6,42 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Script from "next/script";
 
 export const metadata: Metadata = {
-  title: "AUREX - Business Management",
-  description: "Complete business management solution for Pakistani SMBs with invoicing, quotations, client management, and Urdu/English support",
+  title: {
+    default: "Aurex - Smart Business Management for Growing Enterprises",
+    template: "%s | Aurex"
+  },
+  description: "Simplify your business finances with Aurex. Professional invoicing, expense tracking, inventory management, and CRM tools designed for modern businesses.",
+  keywords: ["business management", "invoicing software", "accounting tool", "inventory management", "CRM", "expense tracking", "financial reporting", "small business software", "Aurex", "billing software"],
+  authors: [{ name: "Aurex Team" }],
+  creator: "Aurex",
+  publisher: "Aurex",
+  metadataBase: new URL('https://aurex.company'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://aurex.company",
+    title: "Aurex - Smart Business Management",
+    description: "The all-in-one platform for invoicing, inventory, and client management. Start growing your business today.",
+    siteName: "Aurex",
+    images: [
+      {
+        url: "/og-image.jpg", // We should probably create this or use a placeholder
+        width: 1200,
+        height: 630,
+        alt: "Aurex Dashboard",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Aurex - Business Management Simplified",
+    description: "Manage invoices, clients, and expenses in one place. Try Aurex for free.",
+    images: ["/og-image.jpg"],
+    creator: "@aurex",
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

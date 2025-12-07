@@ -8,74 +8,70 @@ import { AurexLogo } from '@/components/AurexLogo';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  FileText, 
-  Users, 
-  Package, 
-  BarChart3, 
-  Building2, 
+import {
+  FileText,
+  Users,
+  Package,
+  BarChart3,
+  Building2,
   Globe,
   CheckCircle2,
   ArrowRight,
   Sparkles,
   Shield,
   Zap,
-  Loader2
+  Loader2,
+  PieChart,
+  Wallet
 } from 'lucide-react';
 import { useEffect } from 'react';
 
 const features = [
   {
     icon: FileText,
-    title: 'Professional Invoices',
-    titleUrdu: 'پیشہ ور انوائسز',
-    description: 'Create beautiful invoices with multiple templates, automatic tax calculations, and PDF export.',
+    title: 'Smart Invoicing',
+    description: 'Create professional invoices in seconds. Customize templates, automate recurring billing, and get paid faster.',
     color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
   },
   {
     icon: Package,
-    title: 'Quotations',
-    titleUrdu: 'کوٹیشنز',
-    description: 'Send professional quotations and convert them to invoices with one click.',
+    title: 'Inventory Tracking',
+    description: 'Keep track of stock levels in real-time. Get low stock alerts and manage multiple warehouses effortlessly.',
     color: 'bg-green-500/10 text-green-600 dark:text-green-400',
   },
   {
     icon: Users,
-    title: 'Client Management',
-    titleUrdu: 'کلائنٹ مینجمنٹ',
-    description: 'Manage all your clients in one place with complete contact and billing information.',
+    title: 'Client CRM',
+    description: 'Centralize your client data. Track interaction history, payment status, and communications in one secure place.',
     color: 'bg-purple-500/10 text-purple-600 dark:text-purple-400',
   },
   {
     icon: BarChart3,
-    title: 'Reports & Analytics',
-    titleUrdu: 'رپورٹس',
-    description: 'Get insights into your business with detailed sales, tax, and client reports.',
+    title: 'Financial Analytics',
+    description: 'Visual reports that give you a 360-degree view of your business performance, revenue, and growth trends.',
     color: 'bg-orange-500/10 text-orange-600 dark:text-orange-400',
   },
   {
-    icon: Building2,
-    title: 'Bank Export',
-    titleUrdu: 'بینک ایکسپورٹ',
-    description: 'Export bank-ready files for JazzCash, EasyPaisa, and standard bank formats.',
+    icon: Wallet,
+    title: 'Expense Management',
+    description: 'Track every penny. Categorize expenses, scan receipts, and monitor your cash flow with precision.',
     color: 'bg-pink-500/10 text-pink-600 dark:text-pink-400',
   },
   {
     icon: Globe,
-    title: 'Urdu & English',
-    titleUrdu: 'اردو اور انگریزی',
-    description: 'Full bilingual support with RTL layout for Urdu language users.',
+    title: 'Multi-Currency',
+    description: 'Do business globally. Send invoices and accept payments in multiple currencies with real-time conversion.',
     color: 'bg-teal-500/10 text-teal-600 dark:text-teal-400',
   },
 ];
 
 const benefits = [
-  'NTN & STRN compliant invoices for Pakistan',
-  'Multiple invoice templates to choose from',
-  'Automatic tax calculations (GST)',
-  'Track payments and outstanding balances',
-  'Export to PDF, Excel, and CSV',
-  'Complete RTL support for Urdu',
+  'Automated tax calculations & compliance',
+  'Professional templates that fit your brand',
+  'Real-time financial insights & dashboard',
+  'Secure cloud storage & daily backups',
+  'Export data to PDF, Excel, and CSV',
+  '24/7 priority customer support',
 ];
 
 export default function LandingPage() {
@@ -90,7 +86,7 @@ export default function LandingPage() {
 
   if (isPending) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -98,28 +94,29 @@ export default function LandingPage() {
 
   if (session?.user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/20">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <AurexLogo size="md" variant="full" />
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <ThemeToggle />
-              <Link href="/login">
-                <Button variant="ghost">Login</Button>
+              <Link href="/login" className="hidden sm:block">
+                <Button variant="ghost" className="font-medium">
+                  Log in
+                </Button>
               </Link>
               <Link href="/register">
-                <Button className="gap-2">
-                  <Sparkles className="h-4 w-4" />
-                  Try Free
+                <Button className="font-semibold shadow-lg shadow-primary/20">
+                  Get Started
                 </Button>
               </Link>
             </div>
@@ -128,61 +125,95 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-4xl mx-auto">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-1.5 text-sm font-medium mb-6">
-              <Sparkles className="h-4 w-4" />
-              Made for Pakistani Businesses
-            </div>
-            
-            {/* Main Heading */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
-              Smart Business Management
-              <span className="block text-primary mt-2">for Pakistan</span>
-            </h1>
-            
-            {/* Urdu Tagline */}
-            <p className="text-xl sm:text-2xl text-muted-foreground mb-4 font-urdu" dir="rtl">
-              پاکستان کے لیے سمارٹ بزنس مینجمنٹ
-            </p>
-            
-            {/* Description */}
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
-              Create professional invoices, manage clients, track payments, and generate bank-ready exports. 
-              Complete bilingual support in English and Urdu.
-            </p>
-            
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-              <Link href="/register">
-                <Button size="lg" className="gap-2 text-lg px-8 py-6 h-auto">
-                  <Sparkles className="h-5 w-5" />
-                  Start Free Today
-                  <ArrowRight className="h-5 w-5" />
-                </Button>
-              </Link>
-              <Link href="/login">
-                <Button size="lg" variant="outline" className="gap-2 text-lg px-8 py-6 h-auto">
-                  Login to Your Account
-                </Button>
-              </Link>
+      <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {/* Abstract Background Elements */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-primary/5 rounded-full blur-3xl -z-10 opacity-50 pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-blue-500/5 rounded-full blur-3xl -z-10 opacity-30 pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto text-center">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-secondary/50 border border-border/50 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-medium mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+            New: Smart Automation Features
+          </div>
+
+          {/* Main Heading */}
+          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-8 text-foreground animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+            Simplify Your Business
+            <br />
+            <span className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+              Finances & Operations
+            </span>
+          </h1>
+
+          {/* Description */}
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+            The all-in-one platform designed to help modern businesses grow.
+            Manage invoices, expenses, and client relationships seamlessly from one dashboard.
+          </p>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
+            <Link href="/register" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto h-12 px-8 rounded-full text-base font-semibold shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all duration-300 gap-2">
+                Start Free Today
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/login" className="w-full sm:w-auto">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto h-12 px-8 rounded-full text-base font-medium border-muted-foreground/20 hover:bg-secondary/80 transition-all duration-300">
+                Log in to account
+              </Button>
+            </Link>
+          </div>
+
+          {/* Dashboard Preview / Trust Indicators */}
+          <div className="relative animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500">
+            <div className="flex flex-wrap items-center justify-center gap-8 text-sm font-medium text-muted-foreground mb-12">
+              <div className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-primary" />
+                <span>Bank-Grade Security</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" />
+                <span>Setup in 2 Minutes</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-primary" />
+                <span>No Credit Card Required</span>
+              </div>
             </div>
 
-            {/* Trust Indicators */}
-            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-green-500" />
-                <span>Secure & Private</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-yellow-500" />
-                <span>Fast & Reliable</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-blue-500" />
-                <span>FBR Compliant</span>
+            {/* Abstract UI Mockup */}
+            <div className="relative mx-auto max-w-5xl rounded-xl border border-border/50 bg-background/50 backdrop-blur-xl shadow-2xl p-2 sm:p-4">
+              <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-transparent to-blue-500/5 rounded-xl -z-10" />
+              <div className="rounded-lg overflow-hidden border border-border/50 bg-card shadow-sm aspect-[16/9] flex items-center justify-center relative">
+                {/* This would be an actual screenshot in production */}
+                <div className="absolute inset-0 bg-gradient-to-br from-background to-muted flex flex-col p-8">
+                  {/* Header Mockup */}
+                  <div className="h-8 w-full flex items-center justify-between mb-8">
+                    <div className="w-32 h-6 bg-muted-foreground/10 rounded-md" />
+                    <div className="flex gap-4">
+                      <div className="w-8 h-8 rounded-full bg-muted-foreground/10" />
+                      <div className="w-8 h-8 rounded-full bg-muted-foreground/10" />
+                    </div>
+                  </div>
+                  {/* Content Mockup */}
+                  <div className="flex gap-6 flex-1">
+                    <div className="w-48 h-full bg-muted-foreground/5 rounded-lg hidden md:block" />
+                    <div className="flex-1 flex flex-col gap-4">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="h-24 rounded-lg bg-primary/5 border border-primary/10" />
+                        <div className="h-24 rounded-lg bg-blue-500/5 border border-blue-500/10" />
+                        <div className="h-24 rounded-lg bg-green-500/5 border border-green-500/10" />
+                      </div>
+                      <div className="flex-1 bg-muted-foreground/5 rounded-lg border border-border/50" />
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center bg-background/0">
+                  <span className="sr-only">Dashboard Preview</span>
+                </div>
               </div>
             </div>
           </div>
@@ -190,29 +221,26 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/50">
+      <section className="py-24 px-4 sm:px-6 lg:px-8 bg-muted/30">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Everything You Need to Run Your Business
+          <div className="text-center mb-16 max-w-3xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight">
+              Powering Growth for Modern Businesses
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Powerful features designed specifically for Pakistani small and medium businesses
+            <p className="text-lg text-muted-foreground">
+              Everything you need to manage your business operations efficiently, securely, and professionally.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-                <CardContent className="p-6">
-                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${feature.color}`}>
-                    <feature.icon className="h-6 w-6" />
+              <Card key={index} className="border border-border/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-card/50 backdrop-blur-sm">
+                <CardContent className="p-8">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${feature.color}`}>
+                    <feature.icon className="h-7 w-7" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-1">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-2 font-urdu" dir="rtl">
-                    {feature.titleUrdu}
-                  </p>
-                  <p className="text-muted-foreground">
+                  <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed">
                     {feature.description}
                   </p>
                 </CardContent>
@@ -223,30 +251,36 @@ export default function LandingPage() {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <section className="py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-3xl sm:text-4xl font-bold mb-6">
-                Built for Pakistani Businesses
+              <div className="inline-flex items-center gap-2 text-primary font-semibold mb-4">
+                <Sparkles className="h-5 w-5" />
+                Why Choose Aurex?
+              </div>
+              <h2 className="text-3xl sm:text-5xl font-bold mb-6 tracking-tight">
+                Designed to make your life easier
               </h2>
-              <p className="text-lg text-muted-foreground mb-8">
-                AUREX understands the unique needs of businesses in Pakistan. From NTN compliance to bank exports, 
-                we've got you covered.
+              <p className="text-xl text-muted-foreground mb-10 leading-relaxed">
+                Stop wrestling with spreadsheets and complicated software.
+                Aurex gives you the tools you need to focus on what matters most—growing your business.
               </p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8">
                 {benefits.map((benefit, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm">{benefit}</span>
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="h-6 w-6 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-500" />
+                    </div>
+                    <span className="text-base font-medium">{benefit}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-10">
+              <div className="mt-12">
                 <Link href="/register">
-                  <Button size="lg" className="gap-2">
+                  <Button size="lg" className="h-12 px-8 rounded-full text-base gap-2 shadow-lg shadow-primary/20">
                     Get Started Now
                     <ArrowRight className="h-4 w-4" />
                   </Button>
@@ -254,37 +288,54 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="relative">
-              <div className="bg-gradient-to-br from-primary/20 via-primary/10 to-transparent rounded-3xl p-8">
-                <div className="bg-card rounded-2xl shadow-2xl p-6 space-y-4">
+            <div className="relative lg:h-[600px] flex items-center justify-center">
+              <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-purple-500/20 rounded-full blur-3xl opacity-30 animate-pulse" />
+              <div className="relative w-full max-w-lg">
+                <div className="relative z-10 bg-card border border-border/50 rounded-2xl shadow-2xl p-8 space-y-6 rotate-3 hover:rotate-0 transition-transform duration-500">
                   {/* Mock Invoice Preview */}
-                  <div className="flex items-center justify-between border-b pb-4">
+                  <div className="flex items-center justify-between border-b border-border pb-6">
                     <div>
-                      <div className="font-bold text-lg">Invoice #INV-2025-001</div>
-                      <div className="text-sm text-muted-foreground">Your Company Name</div>
+                      <div className="font-bold text-xl mb-1">Invoice #INV-2025-001</div>
+                      <div className="text-sm text-muted-foreground">Tech Solutions Inc.</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">PKR 125,000</div>
-                      <div className="text-xs text-green-600 font-medium">PAID</div>
+                      <div className="text-3xl font-bold text-primary">$1,250.00</div>
+                      <div className="text-xs font-bold bg-green-500/10 text-green-600 px-2 py-1 rounded-full inline-block mt-1">PAID</div>
                     </div>
                   </div>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Client:</span>
-                      <span>ABC Enterprises</span>
+                  <div className="space-y-4 text-sm">
+                    <div className="flex justify-between items-center py-2 border-b border-border/50">
+                      <span className="text-muted-foreground">Billed To</span>
+                      <span className="font-medium">Acme Corp</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Date:</span>
-                      <span>Dec 7, 2025</span>
+                    <div className="flex justify-between items-center py-2 border-b border-border/50">
+                      <span className="text-muted-foreground">Date Issued</span>
+                      <span className="font-medium">Dec 7, 2025</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Tax (17% GST):</span>
-                      <span>PKR 18,162</span>
+                    <div className="flex justify-between items-center py-2 border-b border-border/50">
+                      <span className="text-muted-foreground">Due Date</span>
+                      <span className="font-medium">Dec 21, 2025</span>
                     </div>
                   </div>
-                  <div className="pt-4 flex gap-2">
-                    <div className="h-2 flex-1 bg-primary/20 rounded-full" />
-                    <div className="h-2 w-16 bg-primary rounded-full" />
+                  <div className="pt-4">
+                    <div className="flex justify-between text-sm font-medium mb-2">
+                      <span>Total Amount</span>
+                      <span>$1,250.00</span>
+                    </div>
+                    <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden">
+                      <div className="h-full w-full bg-primary rounded-full" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating Element */}
+                <div className="absolute -bottom-10 -left-10 z-20 bg-background border border-border/50 rounded-xl shadow-xl p-4 flex items-center gap-4 animate-bounce duration-[3000ms]">
+                  <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                    <PieChart className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-muted-foreground">Revenue Growth</div>
+                    <div className="text-lg font-bold text-green-600">+127%</div>
                   </div>
                 </div>
               </div>
@@ -294,37 +345,51 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-primary text-primary-foreground">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-            Ready to Streamline Your Business?
-          </h2>
-          <p className="text-lg opacity-90 mb-8">
-            Join thousands of Pakistani businesses already using AUREX for their invoicing needs.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/register">
-              <Button size="lg" variant="secondary" className="gap-2 text-lg px-8">
-                <Sparkles className="h-5 w-5" />
-                Sign Up Free
-              </Button>
-            </Link>
-            <Link href="/login">
-              <Button size="lg" variant="outline" className="gap-2 text-lg px-8 bg-transparent border-primary-foreground/30 hover:bg-primary-foreground/10">
-                Login
-              </Button>
-            </Link>
+      <section className="py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="bg-primary rounded-3xl p-12 sm:p-20 text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+
+            <h2 className="relative text-3xl sm:text-4xl md:text-5xl font-bold mb-6 text-primary-foreground tracking-tight">
+              Ready to Upgrade Your Workflow?
+            </h2>
+            <p className="relative text-xl text-primary-foreground/90 mb-10 max-w-2xl mx-auto">
+              Join thousands of businesses who trust Aurex for their financial operations.
+              Start your free trial today.
+            </p>
+            <div className="relative flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/register" className="w-full sm:w-auto">
+                <Button size="lg" variant="secondary" className="w-full sm:w-auto h-14 px-10 rounded-full text-lg font-semibold gap-2 shadow-xl  hover:scale-105 transition-all">
+                  <Sparkles className="h-5 w-5" />
+                  Get Started Free
+                </Button>
+              </Link>
+            </div>
+            <p className="relative mt-6 text-sm text-primary-foreground/60">
+              No credit card required. Cancel anytime.
+            </p>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-4 sm:px-6 lg:px-8 border-t">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <AurexLogo size="sm" variant="full" />
-          <p className="text-sm text-muted-foreground">
-            © 2025 AUREX. Smart Business Management for Pakistan.
-          </p>
+      <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t bg-muted/20">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-2">
+              <AurexLogo size="md" variant="full" />
+            </div>
+            <div className="flex gap-8 text-sm text-muted-foreground">
+              <Link href="#" className="hover:text-foreground transition-colors">Privacy</Link>
+              <Link href="#" className="hover:text-foreground transition-colors">Terms</Link>
+              <Link href="#" className="hover:text-foreground transition-colors">Support</Link>
+              <Link href="#" className="hover:text-foreground transition-colors">Contact</Link>
+            </div>
+          </div>
+          <div className="mt-8 text-center md:text-left text-sm text-muted-foreground">
+            © {new Date().getFullYear()} Aurex. All rights reserved.
+          </div>
         </div>
       </footer>
     </div>
