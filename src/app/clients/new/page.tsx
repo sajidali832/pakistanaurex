@@ -10,14 +10,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Save, Loader2 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Save, Loader2, Building2 } from 'lucide-react';
 
 function NewClientContent() {
   const { t } = useI18n();
   const router = useRouter();
   const { companyId, isLoading: companyLoading } = useCompany();
   const [saving, setSaving] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     nameUrdu: '',
@@ -27,6 +28,12 @@ function NewClientContent() {
     city: '',
     ntnNumber: '',
     contactPerson: '',
+    salesTaxRegistration: '',
+    bankName: '',
+    bankAccountNumber: '',
+    bankAccountTitle: '',
+    bankIban: '',
+    bankBranchCode: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -39,13 +46,13 @@ function NewClientContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !companyId) return;
-    
+
     setSaving(true);
     try {
       const token = localStorage.getItem('bearer_token');
       const res = await fetch('/api/clients', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
@@ -56,7 +63,7 @@ function NewClientContent() {
       });
 
       if (!res.ok) throw new Error('Failed to create client');
-      
+
       router.push('/clients');
     } catch (error) {
       console.error('Save failed:', error);
@@ -92,7 +99,7 @@ function NewClientContent() {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="nameUrdu">{t('clientNameUrdu')}</Label>
                 <Input
@@ -116,7 +123,7 @@ function NewClientContent() {
                   onChange={handleChange}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="phone">{t('phone')}</Label>
                 <Input
@@ -139,7 +146,7 @@ function NewClientContent() {
                   onChange={handleChange}
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="ntnNumber">{t('ntn')}</Label>
                 <Input
@@ -170,6 +177,81 @@ function NewClientContent() {
                 name="city"
                 value={formData.city}
                 onChange={handleChange}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="salesTaxRegistration">Sales Tax Registration #</Label>
+              <Input
+                id="salesTaxRegistration"
+                name="salesTaxRegistration"
+                value={formData.salesTaxRegistration}
+                onChange={handleChange}
+                placeholder="35XXXXX-XXXXXX"
+              />
+            </div>
+
+            {/* Bank Details Section */}
+            <Separator className="my-4" />
+            <div className="flex items-center gap-2 mb-4">
+              <Building2 className="h-5 w-5 text-muted-foreground" />
+              <h3 className="text-lg font-medium">Bank Details (For Banking Work)</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="bankName">Bank Name</Label>
+                <Input
+                  id="bankName"
+                  name="bankName"
+                  value={formData.bankName}
+                  onChange={handleChange}
+                  placeholder="e.g., HBL, MCB, UBL"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bankAccountTitle">Account Title</Label>
+                <Input
+                  id="bankAccountTitle"
+                  name="bankAccountTitle"
+                  value={formData.bankAccountTitle}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="bankAccountNumber">Account Number</Label>
+                <Input
+                  id="bankAccountNumber"
+                  name="bankAccountNumber"
+                  value={formData.bankAccountNumber}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bankBranchCode">Branch Code</Label>
+                <Input
+                  id="bankBranchCode"
+                  name="bankBranchCode"
+                  value={formData.bankBranchCode}
+                  onChange={handleChange}
+                  placeholder="0000"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bankIban">IBAN</Label>
+              <Input
+                id="bankIban"
+                name="bankIban"
+                value={formData.bankIban}
+                onChange={handleChange}
+                placeholder="PK00XXXX0000000000000000"
               />
             </div>
 

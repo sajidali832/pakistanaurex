@@ -16,17 +16,18 @@ export const translations: Translations = {
   appName: { en: 'AUREX', ur: 'آریکس' },
   businessManagement: { en: 'AUREX', ur: 'آریکس' },
   tagline: { en: 'Smart Business Management for Pakistan', ur: 'پاکستان کے لیے سمارٹ بزنس مینجمنٹ' },
-  
+
   // Navigation
   dashboard: { en: 'Dashboard', ur: 'ڈیش بورڈ' },
   invoices: { en: 'Invoices', ur: 'انوائسز' },
   quotations: { en: 'Quotations', ur: 'کوٹیشنز' },
+  taxInvoices: { en: 'Tax Invoices', ur: 'ٹیکس انوائسز' },
   clients: { en: 'Clients', ur: 'کلائنٹس' },
   items: { en: 'Items', ur: 'آئٹمز' },
   reports: { en: 'Reports', ur: 'رپورٹس' },
   settings: { en: 'Settings', ur: 'ترتیبات' },
   bankExport: { en: 'Bank Export', ur: 'بینک ایکسپورٹ' },
-  
+
   // Auth
   login: { en: 'Login', ur: 'لاگ ان' },
   register: { en: 'Register', ur: 'رجسٹر' },
@@ -41,7 +42,7 @@ export const translations: Translations = {
   hasAccount: { en: 'Already have an account?', ur: 'پہلے سے اکاؤنٹ ہے؟' },
   signIn: { en: 'Sign In', ur: 'سائن ان' },
   signUp: { en: 'Sign Up', ur: 'سائن اپ' },
-  
+
   // Dashboard
   totalRevenue: { en: 'Total Revenue', ur: 'کل آمدنی' },
   unpaidInvoices: { en: 'Unpaid Invoices', ur: 'غیر ادا شدہ انوائسز' },
@@ -50,7 +51,7 @@ export const translations: Translations = {
   recentInvoices: { en: 'Recent Invoices', ur: 'حالیہ انوائسز' },
   recentQuotations: { en: 'Recent Quotations', ur: 'حالیہ کوٹیشنز' },
   cashFlowSummary: { en: 'Cash Flow Summary', ur: 'نقد بہاؤ کا خلاصہ' },
-  
+
   // Invoice
   createInvoice: { en: 'Create Invoice', ur: 'انوائس بنائیں' },
   editInvoice: { en: 'Edit Invoice', ur: 'انوائس میں ترمیم' },
@@ -78,7 +79,7 @@ export const translations: Translations = {
   exportPDF: { en: 'Export PDF', ur: 'پی ڈی ایف ایکسپورٹ' },
   exportCSV: { en: 'Export CSV', ur: 'سی ایس وی ایکسپورٹ' },
   exportExcel: { en: 'Export Excel', ur: 'ایکسل ایکسپورٹ' },
-  
+
   // Status
   draft: { en: 'Draft', ur: 'ڈرافٹ' },
   sent: { en: 'Sent', ur: 'بھیجا گیا' },
@@ -88,14 +89,14 @@ export const translations: Translations = {
   accepted: { en: 'Accepted', ur: 'قبول شدہ' },
   rejected: { en: 'Rejected', ur: 'مسترد' },
   converted: { en: 'Converted', ur: 'تبدیل شدہ' },
-  
+
   // Quotation
   createQuotation: { en: 'Create Quotation', ur: 'کوٹیشن بنائیں' },
   editQuotation: { en: 'Edit Quotation', ur: 'کوٹیشن میں ترمیم' },
   quotationNumber: { en: 'Quotation Number', ur: 'کوٹیشن نمبر' },
   validUntil: { en: 'Valid Until', ur: 'تک درست' },
   convertToInvoice: { en: 'Convert to Invoice', ur: 'انوائس میں تبدیل کریں' },
-  
+
   // Client
   addClient: { en: 'Add Client', ur: 'کلائنٹ شامل کریں' },
   editClient: { en: 'Edit Client', ur: 'کلائنٹ میں ترمیم' },
@@ -107,7 +108,7 @@ export const translations: Translations = {
   ntn: { en: 'NTN Number', ur: 'این ٹی این نمبر' },
   contactPerson: { en: 'Contact Person', ur: 'رابطہ شخص' },
   balance: { en: 'Balance', ur: 'بقایا' },
-  
+
   // Items
   addNewItem: { en: 'Add New Item', ur: 'نیا آئٹم شامل کریں' },
   editItem: { en: 'Edit Item', ur: 'آئٹم میں ترمیم' },
@@ -118,14 +119,14 @@ export const translations: Translations = {
   taxRate: { en: 'Tax Rate (%)', ur: 'ٹیکس کی شرح (%)' },
   service: { en: 'Service', ur: 'سروس' },
   product: { en: 'Product', ur: 'پروڈکٹ' },
-  
+
   // Bank Export
   exportForJazzCash: { en: 'Export for JazzCash', ur: 'جاز کیش کے لیے ایکسپورٹ' },
   exportForEasyPaisa: { en: 'Export for EasyPaisa', ur: 'ایزی پیسہ کے لیے ایکسپورٹ' },
   bankReconciliation: { en: 'Bank Reconciliation', ur: 'بینک مطابقت' },
   importBankStatement: { en: 'Import Bank Statement', ur: 'بینک سٹیٹمنٹ درآمد کریں' },
   matchTransactions: { en: 'Match Transactions', ur: 'لین دین کا ملاپ' },
-  
+
   // Common
   actions: { en: 'Actions', ur: 'اعمال' },
   delete: { en: 'Delete', ur: 'حذف کریں' },
@@ -143,7 +144,7 @@ export const translations: Translations = {
   yes: { en: 'Yes', ur: 'ہاں' },
   no: { en: 'No', ur: 'نہیں' },
   currency: { en: 'PKR', ur: 'روپے' },
-  
+
   // Company
   companySettings: { en: 'Company Settings', ur: 'کمپنی کی ترتیبات' },
   companyName: { en: 'Company Name', ur: 'کمپنی کا نام' },
@@ -152,7 +153,7 @@ export const translations: Translations = {
   bankName: { en: 'Bank Name', ur: 'بینک کا نام' },
   accountNumber: { en: 'Account Number', ur: 'اکاؤنٹ نمبر' },
   iban: { en: 'IBAN', ur: 'آئی بی اے این' },
-  
+
   // Reports
   salesReport: { en: 'Sales Report', ur: 'فروخت کی رپورٹ' },
   clientReport: { en: 'Client Report', ur: 'کلائنٹ کی رپورٹ' },
@@ -161,7 +162,7 @@ export const translations: Translations = {
   from: { en: 'From', ur: 'سے' },
   to: { en: 'To', ur: 'تک' },
   generateReport: { en: 'Generate Report', ur: 'رپورٹ تیار کریں' },
-  
+
   // Messages
   invoiceCreated: { en: 'Invoice created successfully', ur: 'انوائس کامیابی سے بنائی گئی' },
   invoiceUpdated: { en: 'Invoice updated successfully', ur: 'انوائس کامیابی سے اپڈیٹ ہوئی' },
@@ -170,16 +171,16 @@ export const translations: Translations = {
   quotationConverted: { en: 'Quotation converted to invoice', ur: 'کوٹیشن انوائس میں تبدیل ہوگئی' },
   clientAdded: { en: 'Client added successfully', ur: 'کلائنٹ کامیابی سے شامل ہوا' },
   itemAdded: { en: 'Item added successfully', ur: 'آئٹم کامیابی سے شامل ہوا' },
-  
+
   // Validation
   required: { en: 'This field is required', ur: 'یہ فیلڈ ضروری ہے' },
   invalidEmail: { en: 'Invalid email address', ur: 'غلط ای میل ایڈریس' },
   passwordMismatch: { en: 'Passwords do not match', ur: 'پاس ورڈ مماثل نہیں ہیں' },
   minLength: { en: 'Minimum length is', ur: 'کم از کم لمبائی ہے' },
-  
+
   // Welcome
   welcomeBack: { en: 'Welcome back to AUREX', ur: 'آریکس میں خوش آمدید' },
-  
+
   // Theme
   theme: { en: 'Theme', ur: 'تھیم' },
   light: { en: 'Light', ur: 'روشن' },
@@ -237,7 +238,7 @@ export function formatCurrency(amount: number, language: Language = 'en'): strin
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(amount);
-  
+
   return language === 'ur' ? `${formatted} روپے` : `PKR ${formatted}`;
 }
 

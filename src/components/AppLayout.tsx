@@ -22,7 +22,7 @@ import {
   FileText,
   FileSpreadsheet,
   Users,
-  Package,
+  Receipt,
   BarChart3,
   Settings,
   Building2,
@@ -40,8 +40,8 @@ const navItems = [
   { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
   { key: 'invoices', href: '/invoices', icon: FileText },
   { key: 'quotations', href: '/quotations', icon: FileSpreadsheet },
+  { key: 'taxInvoices', href: '/tax-invoices', icon: Receipt },
   { key: 'clients', href: '/clients', icon: Users },
-  { key: 'items', href: '/items', icon: Package },
   { key: 'reports', href: '/reports', icon: BarChart3 },
   { key: 'bankExport', href: '/bank-export', icon: Building2 },
   { key: 'settings', href: '/settings', icon: Settings },
@@ -93,16 +93,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const NavLink = ({ item }: { item: typeof navItems[0] }) => {
     const Icon = item.icon;
     const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-    
+
     return (
       <Link
         href={item.href}
         onClick={() => setMobileOpen(false)}
-        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-          isActive
+        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${isActive
             ? 'bg-primary text-primary-foreground'
             : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-        }`}
+          }`}
       >
         <Icon className="h-5 w-5" />
         <span>{t(item.key)}</span>
@@ -117,13 +116,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
           <AurexLogo size="md" variant="full" />
         </Link>
       </div>
-      
+
       <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => (
           <NavLink key={item.key} item={item} />
         ))}
       </nav>
-      
+
       <div className="p-4 border-t space-y-2">
         <Button
           variant="outline"
@@ -156,13 +155,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <Sidebar />
           </SheetContent>
         </Sheet>
-        
+
         <div className="flex-1">
           <AurexLogo size="sm" variant="full" />
         </div>
-        
+
         <ThemeToggle />
-        
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
@@ -192,14 +191,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
         {/* Desktop Header */}
         <header className="hidden lg:flex h-16 items-center justify-between border-b bg-background px-6">
           <h1 className="text-xl font-semibold">
-            {navItems.find(item => pathname.startsWith(item.href))?.key 
+            {navItems.find(item => pathname.startsWith(item.href))?.key
               ? t(navItems.find(item => pathname.startsWith(item.href))!.key)
               : t('dashboard')}
           </h1>
-          
+
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="gap-2">

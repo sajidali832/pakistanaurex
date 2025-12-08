@@ -35,12 +35,14 @@ interface Client {
   nameUrdu: string | null;
 }
 
-interface Item {
+interface CompanyFull {
   id: number;
   name: string;
-  nameUrdu: string | null;
-  unitPrice: number;
-  taxRate: number;
+  address: string;
+  city: string;
+  ntnNumber: string;
+  defaultTaxRate: number;
+  paymentTermsDays: number;
 }
 
 interface Company {
@@ -51,7 +53,6 @@ interface Company {
 
 interface LineItem {
   id: string;
-  itemId: number | null;
   description: string;
   quantity: number;
   unitPrice: number;
@@ -64,13 +65,12 @@ function NewInvoiceContent() {
   const { t, language } = useI18n();
   const router = useRouter();
   const { companyId, isLoading: companyLoading } = useCompany();
-  
+
   const [clients, setClients] = useState<Client[]>([]);
-  const [items, setItems] = useState<Item[]>([]);
-  const [companySettings, setCompanySettings] = useState<Company | null>(null);
+  const [companySettings, setCompanySettings] = useState<CompanyFull | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  
+
   const [clientId, setClientId] = useState<string>('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [issueDate, setIssueDate] = useState(new Date().toISOString().split('T')[0]);
@@ -78,7 +78,7 @@ function NewInvoiceContent() {
   const [notes, setNotes] = useState('');
   const [terms, setTerms] = useState('');
   const [discountAmount, setDiscountAmount] = useState(0);
-  
+
   const [lineItems, setLineItems] = useState<LineItem[]>([]);
 
   useEffect(() => {
@@ -91,11 +91,8 @@ function NewInvoiceContent() {
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('bearer_token');
-      const [clientsRes, itemsRes, companiesRes] = await Promise.all([
+      const [clientsRes, companiesRes] = await Promise.all([
         fetch('/api/clients', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        }),
-        fetch('/api/items', {
           headers: { 'Authorization': `Bearer ${token}` },
         }),
         fetch('/api/companies', {
@@ -103,32 +100,37 @@ function NewInvoiceContent() {
         }),
       ]);
       const clientsData = await clientsRes.json();
-      const itemsData = await itemsRes.json();
       const companiesData = await companiesRes.json();
-      
+
       setClients(Array.isArray(clientsData) ? clientsData : []);
-      setItems(Array.isArray(itemsData) ? itemsData : []);
-      
+
       // Get company settings for defaults
       if (Array.isArray(companiesData) && companiesData.length > 0) {
         const company = companiesData[0];
         setCompanySettings(company);
-        
+
         // Set default tax rate and payment terms from company settings
         const defaultTaxRate = company.defaultTaxRate ?? 17;
         const paymentTermsDays = company.paymentTermsDays ?? 30;
-        
+
         // Set default due date based on payment terms
         const dueDateObj = new Date();
         dueDateObj.setDate(dueDateObj.getDate() + paymentTermsDays);
         setDueDate(dueDateObj.toISOString().split('T')[0]);
-        
+
         // Set default terms
         setTerms(`Payment due within ${paymentTermsDays} days`);
-        
+
+        // Check if company settings are complete
+        if (!company.name || !company.address || !company.ntnNumber) {
+          toast.error('Please complete your company settings before creating invoices');
+          router.push('/settings');
+          return;
+        }
+
         // Initialize line items with company's default tax rate
         setLineItems([
-          { id: '1', itemId: null, description: '', quantity: 1, unitPrice: 0, taxRate: defaultTaxRate, taxAmount: 0, lineTotal: 0 }
+          { id: '1', description: '', quantity: 1, unitPrice: 0, taxRate: defaultTaxRate, taxAmount: 0, lineTotal: 0 }
         ]);
       } else {
         // Fallback defaults
@@ -137,7 +139,7 @@ function NewInvoiceContent() {
         setDueDate(dueDateObj.toISOString().split('T')[0]);
         setTerms('Payment due within 30 days');
         setLineItems([
-          { id: '1', itemId: null, description: '', quantity: 1, unitPrice: 0, taxRate: 17, taxAmount: 0, lineTotal: 0 }
+          { id: '1', description: '', quantity: 1, unitPrice: 0, taxRate: 17, taxAmount: 0, lineTotal: 0 }
         ]);
       }
     } catch (error) {
@@ -161,7 +163,7 @@ function NewInvoiceContent() {
   };
 
   const updateLineItem = (id: string, field: keyof LineItem, value: any) => {
-    setLineItems(prevItems => 
+    setLineItems(prevItems =>
       prevItems.map(item => {
         if (item.id !== id) return item;
         const updated = { ...item, [field]: value };
@@ -174,7 +176,7 @@ function NewInvoiceContent() {
     const defaultTaxRate = companySettings?.defaultTaxRate ?? 17;
     setLineItems([
       ...lineItems,
-      { id: Date.now().toString(), itemId: null, description: '', quantity: 1, unitPrice: 0, taxRate: defaultTaxRate, taxAmount: 0, lineTotal: 0 }
+      { id: Date.now().toString(), description: '', quantity: 1, unitPrice: 0, taxRate: defaultTaxRate, taxAmount: 0, lineTotal: 0 }
     ]);
   };
 
@@ -184,24 +186,7 @@ function NewInvoiceContent() {
     }
   };
 
-  const selectItem = (lineId: string, itemId: string) => {
-    const selectedItem = items.find(i => i.id === parseInt(itemId));
-    if (selectedItem) {
-      setLineItems(prevItems =>
-        prevItems.map(item => {
-          if (item.id !== lineId) return item;
-          const updated = {
-            ...item,
-            itemId: selectedItem.id,
-            description: language === 'ur' && selectedItem.nameUrdu ? selectedItem.nameUrdu : selectedItem.name,
-            unitPrice: selectedItem.unitPrice,
-            taxRate: selectedItem.taxRate || companySettings?.defaultTaxRate || 17,
-          };
-          return calculateLineItem(updated);
-        })
-      );
-    }
-  };
+
 
   const subtotal = lineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
   const taxAmount = lineItems.reduce((sum, item) => sum + item.taxAmount, 0);
@@ -212,14 +197,14 @@ function NewInvoiceContent() {
       toast.error('Please select a client and enter invoice number');
       return;
     }
-    
+
     setSaving(true);
     try {
       const token = localStorage.getItem('bearer_token');
       // Create invoice
       const invoiceRes = await fetch('/api/invoices', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
@@ -241,7 +226,7 @@ function NewInvoiceContent() {
       });
 
       if (!invoiceRes.ok) throw new Error('Failed to create invoice');
-      
+
       const invoice = await invoiceRes.json();
 
       // Create invoice lines
@@ -249,13 +234,12 @@ function NewInvoiceContent() {
         const line = lineItems[i];
         await fetch('/api/invoice-lines', {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             invoiceId: invoice.id,
-            itemId: line.itemId,
             description: line.description,
             quantity: line.quantity,
             unitPrice: line.unitPrice,
@@ -301,7 +285,7 @@ function NewInvoiceContent() {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label>{t('client')}</Label>
               <Select value={clientId} onValueChange={setClientId}>
@@ -317,7 +301,7 @@ function NewInvoiceContent() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label>{t('issueDate')}</Label>
               <Input
@@ -327,7 +311,7 @@ function NewInvoiceContent() {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label>{t('dueDate')}</Label>
               <Input
@@ -345,7 +329,6 @@ function NewInvoiceContent() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-48">{t('items')}</TableHead>
                     <TableHead>{t('description')}</TableHead>
                     <TableHead className="w-24">{t('quantity')}</TableHead>
                     <TableHead className="w-32">{t('unitPrice')}</TableHead>
@@ -357,23 +340,6 @@ function NewInvoiceContent() {
                 <TableBody>
                   {lineItems.map((line) => (
                     <TableRow key={line.id}>
-                      <TableCell>
-                        <Select
-                          value={line.itemId?.toString() || ''}
-                          onValueChange={(value) => selectItem(line.id, value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder={t('selectClient')} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {items.map((item) => (
-                              <SelectItem key={item.id} value={item.id.toString()}>
-                                {language === 'ur' && item.nameUrdu ? item.nameUrdu : item.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
                       <TableCell>
                         <Input
                           value={line.description}
@@ -424,7 +390,7 @@ function NewInvoiceContent() {
                 </TableBody>
                 <TableFooter>
                   <TableRow>
-                    <TableCell colSpan={7}>
+                    <TableCell colSpan={6}>
                       <Button variant="ghost" size="sm" onClick={addLineItem}>
                         <Plus className="h-4 w-4 mr-2" />
                         {t('addItem')}
