@@ -76,10 +76,12 @@ interface Company {
   strnNumber: string;
 }
 
+import { generateQuotationDoc } from '@/lib/generateQuotationDoc';
+
 function QuotationDetailContent({ id }: { id: string }) {
   const { t, language } = useI18n();
   const router = useRouter();
-  
+
   const [quotation, setQuotation] = useState<Quotation | null>(null);
   const [lines, setLines] = useState<QuotationLine[]>([]);
   const [client, setClient] = useState<Client | null>(null);
@@ -135,7 +137,7 @@ function QuotationDetailContent({ id }: { id: string }) {
   const handleConvertToInvoice = async () => {
     if (!quotation) return;
     setConverting(true);
-    
+
     try {
       const year = new Date().getFullYear();
       const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
@@ -194,8 +196,10 @@ function QuotationDetailContent({ id }: { id: string }) {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
+  const handleDownloadWord = async () => {
+    if (quotation && client) {
+      await generateQuotationDoc(quotation, lines, client, company);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -259,9 +263,9 @@ function QuotationDetailContent({ id }: { id: string }) {
               {t('edit')}
             </Button>
           </Link>
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="h-4 w-4 mr-2" />
-            {t('print')}
+          <Button variant="outline" onClick={handleDownloadWord}>
+            <FileText className="h-4 w-4 mr-2" />
+            Download Word
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -421,7 +425,7 @@ function QuotationDetailContent({ id }: { id: string }) {
 
 export default function QuotationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  
+
   return (
     <I18nProvider>
       <AppLayout>
