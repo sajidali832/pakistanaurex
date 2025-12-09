@@ -29,23 +29,14 @@ export function PublicHeader() {
         },
     ];
 
-    // Add Auth specific links
+    // Add auth-specific link: only show Dashboard when signed in.
+    // We intentionally do NOT show small Login/Register here because
+    // the hero section already has big buttons for those actions.
     if (isLoaded && isSignedIn) {
         navItems.push({
             name: "Dashboard",
             link: "/dashboard",
             icon: <LayoutDashboard className="h-4 w-4 text-neutral-500 dark:text-white" />,
-        });
-    } else {
-        navItems.push({
-            name: "Login",
-            link: "/login",
-            icon: <LogIn className="h-4 w-4 text-neutral-500 dark:text-white" />,
-        });
-        navItems.push({
-            name: "Register",
-            link: "/register",
-            icon: <UserPlus className="h-4 w-4 text-neutral-500 dark:text-white" />,
         });
     }
 

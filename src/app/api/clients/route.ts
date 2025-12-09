@@ -112,24 +112,34 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Authentication required', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
+    const [currentUser] = await db
+      .select()
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1);
+
+    if (!currentUser || !currentUser.companyId) {
+      return NextResponse.json(
+        { error: 'User has no company associated', code: 'NO_COMPANY' },
+        { status: 400 }
+      );
+    }
+
+    const companyIdFromUser = currentUser.companyId;
+
     const body = await request.json();
-    const { companyId, name, nameUrdu, email, phone, address, city, ntnNumber, contactPerson, balance } = body;
+    const { name, nameUrdu, email, phone, address, city, ntnNumber, contactPerson, balance } = body;
 
     // Validate required fields
-    if (!companyId) {
-      return NextResponse.json(
-        { error: 'Company ID is required', code: 'MISSING_COMPANY_ID' },
-        { status: 400 }
-      );
-    }
-
-    if (isNaN(parseInt(companyId))) {
-      return NextResponse.json(
-        { error: 'Valid company ID is required', code: 'INVALID_COMPANY_ID' },
-        { status: 400 }
-      );
-    }
-
     if (!name || typeof name !== 'string' || name.trim() === '') {
       return NextResponse.json(
         { error: 'Name is required and cannot be empty', code: 'MISSING_NAME' },
@@ -162,7 +172,7 @@ export async function POST(request: NextRequest) {
     const company = await db
       .select()
       .from(companies)
-      .where(eq(companies.id, parseInt(companyId)))
+      .where(eq(companies.id, companyIdFromUser))
       .limit(1);
 
     if (company.length === 0) {
@@ -174,7 +184,7 @@ export async function POST(request: NextRequest) {
 
     // Prepare insert data
     const insertData = {
-      companyId: parseInt(companyId),
+      companyId: companyIdFromUser,
       name: name.trim(),
       nameUrdu: nameUrdu && typeof nameUrdu === 'string' ? nameUrdu.trim() : null,
       email: email && typeof email === 'string' ? email.trim().toLowerCase() : null,
@@ -204,6 +214,30 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Authentication required', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
+    const [currentUser] = await db
+      .select()
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1);
+
+    if (!currentUser || !currentUser.companyId) {
+      return NextResponse.json(
+        { error: 'User has no company associated', code: 'NO_COMPANY' },
+        { status: 400 }
+      );
+    }
+
+    const companyIdFromUser = currentUser.companyId;
+
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get('id');
 
@@ -215,7 +249,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { companyId, name, nameUrdu, email, phone, address, city, ntnNumber, contactPerson, balance } = body;
+    const { name, nameUrdu, email, phone, address, city, ntnNumber, contactPerson, balance } = body;
 
     // Check if client exists
     const existingClient = await db
@@ -231,28 +265,18 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Validate fields if provided
-    if (companyId !== undefined) {
-      if (isNaN(parseInt(companyId))) {
-        return NextResponse.json(
-          { error: 'Valid company ID is required', code: 'INVALID_COMPANY_ID' },
-          { status: 400 }
-        );
-      }
+    // Validate company for current user
+    const company = await db
+      .select()
+      .from(companies)
+      .where(eq(companies.id, companyIdFromUser))
+      .limit(1);
 
-      // Verify company exists
-      const company = await db
-        .select()
-        .from(companies)
-        .where(eq(companies.id, parseInt(companyId)))
-        .limit(1);
-
-      if (company.length === 0) {
-        return NextResponse.json(
-          { error: 'Company not found', code: 'COMPANY_NOT_FOUND' },
-          { status: 404 }
-        );
-      }
+    if (company.length === 0) {
+      return NextResponse.json(
+        { error: 'Company not found', code: 'COMPANY_NOT_FOUND' },
+        { status: 404 }
+      );
     }
 
     if (name !== undefined && (typeof name !== 'string' || name.trim() === '')) {
@@ -280,9 +304,10 @@ export async function PUT(request: NextRequest) {
     }
 
     // Prepare update data
-    const updateData: any = {};
+    const updateData: any = {
+      companyId: companyIdFromUser,
+    };
 
-    if (companyId !== undefined) updateData.companyId = parseInt(companyId);
     if (name !== undefined) updateData.name = name.trim();
     if (nameUrdu !== undefined) updateData.nameUrdu = nameUrdu && typeof nameUrdu === 'string' ? nameUrdu.trim() : null;
     if (email !== undefined) updateData.email = email && typeof email === 'string' ? email.trim().toLowerCase() : null;
