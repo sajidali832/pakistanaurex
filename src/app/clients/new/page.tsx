@@ -45,19 +45,18 @@ function NewClientContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !companyId) return;
+    if (!formData.name) return;
 
     setSaving(true);
     try {
-      const token = localStorage.getItem('bearer_token');
+      // Rely on Clerk session cookies for authentication; no manual bearer token.
       const res = await fetch('/api/clients', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
+        // The API derives companyId from the authenticated user; we only send form data.
         body: JSON.stringify({
-          companyId,
           ...formData,
         }),
       });
