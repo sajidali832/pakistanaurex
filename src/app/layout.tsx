@@ -3,6 +3,7 @@ import "./globals.css";
 import VisualEditsMessenger from "../visual-edits/VisualEditsMessenger";
 import ErrorReporter from "@/components/ErrorReporter";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { ClerkProvider } from "@clerk/nextjs";
 import Script from "next/script";
 
 export const metadata: Metadata = {
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Aurex Team" }],
   creator: "Aurex",
   publisher: "Aurex",
-  metadataBase: new URL('https://aurex.company'),
+  metadataBase: new URL('https://aurex.sbs'),
   alternates: {
     canonical: '/',
   },
@@ -75,44 +76,46 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-      </head>
-      <body className="antialiased">
-        <ThemeProvider>
-          <ErrorReporter />
-          <Script
-            src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts//route-messenger.js"
-            strategy="afterInteractive"
-            data-target-origin="*"
-            data-message-type="ROUTE_CHANGE"
-            data-include-search-params="true"
-            data-only-in-iframe="true"
-            data-debug="true"
-            data-custom-data='{"appName": "AUREX", "version": "1.0.0", "greeting": "hi"}'
-          />
-          <Script id="register-sw" strategy="afterInteractive">
-            {`
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then((registration) => {
-                      console.log('SW registered:', registration.scope);
-                    })
-                    .catch((error) => {
-                      console.log('SW registration failed:', error);
-                    });
-                });
-              }
-            `}
-          </Script>
-          {children}
-          <VisualEditsMessenger />
-        </ThemeProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" suppressHydrationWarning>
+        <head>
+          <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        </head>
+        <body className="antialiased">
+          <ThemeProvider>
+            <ErrorReporter />
+            <Script
+              src="https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/scripts//route-messenger.js"
+              strategy="afterInteractive"
+              data-target-origin="*"
+              data-message-type="ROUTE_CHANGE"
+              data-include-search-params="true"
+              data-only-in-iframe="true"
+              data-debug="true"
+              data-custom-data='{"appName": "AUREX", "version": "1.0.0", "greeting": "hi"}'
+            />
+            <Script id="register-sw" strategy="afterInteractive">
+              {`
+                if ('serviceWorker' in navigator) {
+                  window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js')
+                      .then((registration) => {
+                        console.log('SW registered:', registration.scope);
+                      })
+                      .catch((error) => {
+                        console.log('SW registration failed:', error);
+                      });
+                  });
+                }
+              `}
+            </Script>
+            {children}
+            <VisualEditsMessenger />
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

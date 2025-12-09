@@ -1,31 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { db } from '@/db';
 import { user, companies } from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { auth } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({ headers: request.headers });
-    
-    if (!session?.user) {
+    const { userId } = await auth();
+
+    if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required', code: 'UNAUTHORIZED' },
         { status: 401 }
       );
     }
 
-    const currentUser = await db
+    // First, check if a user record exists for this Clerk user
+    let currentUser = await db
       .select()
       .from(user)
-      .where(eq(user.id, session.user.id))
+      .where(eq(user.id, userId))
       .limit(1);
 
+    // If no user record exists, create one (first time Clerk user logs in)
     if (currentUser.length === 0) {
-      return NextResponse.json(
-        { error: 'User not found', code: 'USER_NOT_FOUND' },
-        { status: 404 }
-      );
+      const newUser = await db
+        .insert(user)
+        .values({
+          id: userId,
+          name: 'User',
+          email: '',
+          emailVerified: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+      currentUser = newUser;
     }
 
     const userData = currentUser[0];
@@ -47,10 +57,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(company[0], { status: 200 });
     }
 
+    // Create a new company for this user
     const newCompany = await db
       .insert(companies)
       .values({
-        name: `${session.user.name} Business`,
+        name: `My Business`,
         nameUrdu: null,
         ntnNumber: null,
         strnNumber: null,
@@ -70,7 +81,7 @@ export async function GET(request: NextRequest) {
     await db
       .update(user)
       .set({ companyId: newCompany[0].id })
-      .where(eq(user.id, session.user.id));
+      .where(eq(user.id, userId));
 
     return NextResponse.json(newCompany[0], { status: 200 });
   } catch (error) {
@@ -84,9 +95,9 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({ headers: request.headers });
-    
-    if (!session?.user) {
+    const { userId } = await auth();
+
+    if (!userId) {
       return NextResponse.json(
         { error: 'Authentication required', code: 'UNAUTHORIZED' },
         { status: 401 }
@@ -96,7 +107,7 @@ export async function PUT(request: NextRequest) {
     const currentUser = await db
       .select()
       .from(user)
-      .where(eq(user.id, session.user.id))
+      .where(eq(user.id, userId))
       .limit(1);
 
     if (currentUser.length === 0) {

@@ -1,12 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { db } from '@/db';
-import { invoices } from '@/db/schema';
+import { invoices, user } from '@/db/schema';
 import { eq, like, and, desc } from 'drizzle-orm';
 
 const VALID_STATUSES = ['draft', 'sent', 'paid', 'overdue', 'cancelled'] as const;
 
 export async function GET(request: NextRequest) {
   try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Authentication required', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
+    const [currentUser] = await db
+      .select()
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1);
+
+    if (!currentUser || !currentUser.companyId) {
+      return NextResponse.json(
+        { error: 'User has no company associated', code: 'NO_COMPANY' },
+        { status: 400 }
+      );
+    }
+
+    const companyIdFromUser = currentUser.companyId;
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -23,6 +48,7 @@ export async function GET(request: NextRequest) {
         .select()
         .from(invoices)
         .where(eq(invoices.id, parseInt(id)))
+        .where(eq(invoices.companyId, companyIdFromUser))
         .limit(1);
 
       if (invoice.length === 0) {
@@ -39,7 +65,7 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get('limit') ?? '10'), 100);
     const offset = parseInt(searchParams.get('offset') ?? '0');
     const search = searchParams.get('search');
-    const companyId = searchParams.get('companyId');
+    const companyId = companyIdFromUser?.toString();
     const clientId = searchParams.get('clientId');
     const status = searchParams.get('status');
 

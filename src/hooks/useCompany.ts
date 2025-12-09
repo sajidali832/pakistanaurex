@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSession } from '@/lib/auth-client';
+import { useUser } from '@clerk/nextjs';
 
 interface Company {
   id: number;
@@ -22,13 +22,13 @@ interface Company {
 }
 
 export function useCompany() {
-  const { data: session, isPending: sessionPending } = useSession();
+  const { user, isLoaded } = useUser();
   const [company, setCompany] = useState<Company | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchCompany = useCallback(async () => {
-    if (!session?.user) {
+    if (!user) {
       setCompany(null);
       setIsLoading(false);
       return;
@@ -36,12 +36,7 @@ export function useCompany() {
 
     try {
       setIsLoading(true);
-      const token = localStorage.getItem('bearer_token');
-      const res = await fetch('/api/user-company', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const res = await fetch('/api/user-company');
 
       if (!res.ok) {
         throw new Error('Failed to fetch company');
@@ -56,13 +51,13 @@ export function useCompany() {
     } finally {
       setIsLoading(false);
     }
-  }, [session?.user]);
+  }, [user]);
 
   useEffect(() => {
-    if (!sessionPending) {
+    if (isLoaded) {
       fetchCompany();
     }
-  }, [sessionPending, fetchCompany]);
+  }, [isLoaded, fetchCompany]);
 
   const refetch = useCallback(() => {
     fetchCompany();
@@ -71,7 +66,7 @@ export function useCompany() {
   return {
     company,
     companyId: company?.id || null,
-    isLoading: sessionPending || isLoading,
+    isLoading: !isLoaded || isLoading,
     error,
     refetch,
   };

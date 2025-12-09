@@ -1,11 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { db } from '@/db';
-import { clients, companies } from '@/db/schema';
+import { clients, companies, user } from '@/db/schema';
 import { eq, like, and, or, desc } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Authentication required', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
+    const [currentUser] = await db
+      .select()
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1);
+
+    if (!currentUser || !currentUser.companyId) {
+      return NextResponse.json(
+        { error: 'User has no company associated', code: 'NO_COMPANY' },
+        { status: 400 }
+      );
+    }
+
+    const companyIdFromUser = currentUser.companyId;
+
     const searchParams = request.nextUrl.searchParams;
+
     const id = searchParams.get('id');
 
     // Single client by ID
@@ -21,6 +47,7 @@ export async function GET(request: NextRequest) {
         .select()
         .from(clients)
         .where(eq(clients.id, parseInt(id)))
+        .where(eq(clients.companyId, companyIdFromUser))
         .limit(1);
 
       if (client.length === 0) {
@@ -37,13 +64,13 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get('limit') ?? '10'), 100);
     const offset = parseInt(searchParams.get('offset') ?? '0');
     const search = searchParams.get('search');
-    const companyId = searchParams.get('companyId');
+    const companyId = companyIdFromUser?.toString();
 
     let query = db.select().from(clients);
 
     const conditions = [];
 
-    // Filter by companyId
+    // Filter by the current user's companyId
     if (companyId) {
       if (isNaN(parseInt(companyId))) {
         return NextResponse.json(

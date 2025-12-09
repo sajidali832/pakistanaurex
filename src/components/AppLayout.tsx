@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useI18n, Language } from '@/lib/i18n';
-import { authClient, useSession } from '@/lib/auth-client';
+import { useUser, useClerk } from '@clerk/nextjs';
 import { AurexLogo } from './AurexLogo';
 import { ThemeToggle } from './ThemeToggle';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Tooltip,
   TooltipContent,
@@ -57,17 +57,18 @@ const navItems = [
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const { t, language, setLanguage, isRTL } = useI18n();
-  const { data: session, isPending, refetch } = useSession();
+  const { user, isLoaded } = useUser();
+  const { signOut } = useClerk();
   const router = useRouter();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
-    if (!isPending && !session?.user) {
+    if (isLoaded && !user) {
       router.push('/login');
     }
-  }, [session, isPending, router]);
+  }, [user, isLoaded, router]);
 
   useEffect(() => {
     // Load collapsed state from localStorage
@@ -84,16 +85,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   };
 
   const handleSignOut = async () => {
-    const token = localStorage.getItem("bearer_token");
-    await authClient.signOut({
-      fetchOptions: {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    });
-    localStorage.removeItem("bearer_token");
-    refetch();
+    await signOut();
     router.push('/login');
   };
 
@@ -101,7 +93,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     setLanguage(language === 'en' ? 'ur' : 'en');
   };
 
-  if (isPending) {
+  if (!isLoaded) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -109,9 +101,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
     );
   }
 
-  if (!session?.user) {
+  if (!user) {
     return null;
   }
+
+  // Get user display info
+  const userName = user.fullName || user.firstName || 'User';
+  const userEmail = user.primaryEmailAddress?.emailAddress || '';
+  const userInitial = userName.charAt(0).toUpperCase();
+  const userImage = user.imageUrl;
 
   const NavLink = ({ item, collapsed }: { item: typeof navItems[0]; collapsed?: boolean }) => {
     const Icon = item.icon;
@@ -122,8 +120,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
         href={item.href}
         onClick={() => setMobileOpen(false)}
         className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 rounded-lg transition-all duration-200 ${isActive
-            ? 'bg-primary text-primary-foreground shadow-sm'
-            : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+          ? 'bg-primary text-primary-foreground shadow-sm'
+          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
           }`}
       >
         <Icon className="h-5 w-5 flex-shrink-0" />
@@ -288,9 +286,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback>
-                    {session.user.name?.charAt(0).toUpperCase() || 'U'}
-                  </AvatarFallback>
+                  {userImage && <AvatarImage src={userImage} alt={userName} />}
+                  <AvatarFallback>{userInitial}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
@@ -326,17 +323,16 @@ export default function AppLayout({ children }: AppLayoutProps) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="gap-2">
                     <Avatar className="h-8 w-8">
-                      <AvatarFallback>
-                        {session.user.name?.charAt(0).toUpperCase() || 'U'}
-                      </AvatarFallback>
+                      {userImage && <AvatarImage src={userImage} alt={userName} />}
+                      <AvatarFallback>{userInitial}</AvatarFallback>
                     </Avatar>
-                    <span>{session.user.name}</span>
+                    <span>{userName}</span>
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align={isRTL ? 'start' : 'end'}>
                   <DropdownMenuItem disabled>
-                    {session.user.email}
+                    {userEmail}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>

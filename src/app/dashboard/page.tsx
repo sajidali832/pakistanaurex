@@ -69,20 +69,22 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (companyId) {
-      fetchDashboardData();
-    }
+    // Always try to load dashboard data once.
+    // If companyId is available, APIs will be filtered; otherwise we load global data.
+    fetchDashboardData();
   }, [companyId]);
 
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('bearer_token');
-      const headers = { 'Authorization': `Bearer ${token}` };
-      
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+      const companyQuery = companyId ? `&companyId=${companyId}` : '';
+
       const [invoicesRes, quotationsRes, clientsRes] = await Promise.all([
-        fetch('/api/invoices?limit=5', { headers }),
-        fetch('/api/quotations?limit=5', { headers }),
-        fetch('/api/clients', { headers }),
+        fetch(`/api/invoices?limit=5${companyQuery}`, { headers }),
+        fetch(`/api/quotations?limit=5${companyQuery}`, { headers }),
+        fetch(`/api/clients${companyId ? `?companyId=${companyId}` : ''}`, { headers }),
       ]);
 
       const invoices = await invoicesRes.json();

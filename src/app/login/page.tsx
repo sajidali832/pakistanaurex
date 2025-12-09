@@ -3,9 +3,8 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useI18n } from '@/lib/i18n';
-import { I18nProvider } from '@/lib/i18n';
-import { authClient, useSession } from '@/lib/auth-client';
+import { useSignIn, useAuth, useClerk } from '@clerk/nextjs';
+import { useI18n, I18nProvider } from '@/lib/i18n';
 import { AurexLogo } from '@/components/AurexLogo';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
@@ -14,13 +13,15 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Globe, Loader2 } from 'lucide-react';
+import { Globe, Loader2, LogIn } from 'lucide-react';
 
 function LoginForm() {
   const { t, language, setLanguage, isRTL } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: session } = useSession();
+  const { isLoaded, signIn, setActive } = useSignIn();
+  const { isSignedIn, isLoaded: authLoaded } = useAuth();
+  const { signOut } = useClerk();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,11 +30,13 @@ function LoginForm() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  // If already signed in, redirect to dashboard
   useEffect(() => {
-    if (session?.user) {
-      router.push('/dashboard');
+    if (authLoaded && isSignedIn) {
+      const redirectUrl = searchParams.get('redirect_url') || '/dashboard';
+      router.push(redirectUrl);
     }
-  }, [session, router]);
+  }, [isSignedIn, authLoaded, router, searchParams]);
 
   useEffect(() => {
     if (searchParams.get('registered') === 'true') {
@@ -43,23 +46,48 @@ function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
 
-    const { error: authError, data } = await authClient.signIn.email({
-      email,
-      password,
-      rememberMe,
-      callbackURL: '/dashboard',
-    });
-
-    if (authError) {
-      setError('Invalid email or password');
-      setLoading(false);
+    if (!isLoaded || !signIn) {
+      setError('Login service is not ready yet. Please wait a moment and try again.');
       return;
     }
 
-    router.push('/dashboard');
+    // If already signed in, just redirect
+    if (isSignedIn) {
+      router.push('/dashboard');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const result = await signIn.create({
+        identifier: email,
+        password,
+      });
+
+      if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId });
+        const redirectUrl = searchParams.get('redirect_url') || '/dashboard';
+        router.push(redirectUrl);
+      } else {
+        console.log('Sign-in result:', result);
+        setError('Additional verification required. Please try again.');
+      }
+    } catch (err: any) {
+      console.error('Sign-in error:', err);
+      // Handle "session already exists" error
+      if (err?.errors?.[0]?.code === 'session_exists') {
+        // User is already signed in, redirect
+        router.push('/dashboard');
+        return;
+      }
+      const errorMessage = err?.errors?.[0]?.message || 'Invalid email or password';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleLanguage = () => {
@@ -67,8 +95,14 @@ function LoginForm() {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background to-muted p-4 ${isRTL ? 'rtl' : 'ltr'}`}>
-      <div className="absolute top-4 right-4 flex items-center gap-2">
+    <div className={`min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-muted/50 p-4 ${isRTL ? 'rtl' : 'ltr'}`}>
+      {/* Decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+      </div>
+
+      <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
         <ThemeToggle />
         <Button
           variant="ghost"
@@ -80,15 +114,18 @@ function LoginForm() {
         </Button>
       </div>
 
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-md space-y-6 relative z-10">
         <div className="flex flex-col items-center space-y-3">
           <AurexLogo size="xl" variant="full" />
           <p className="text-muted-foreground text-center">{t('tagline')}</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('login')}</CardTitle>
+        <Card className="border-0 shadow-2xl bg-card/80 backdrop-blur-xl">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 bg-gradient-to-br from-primary to-primary/60 rounded-xl flex items-center justify-center mb-2 shadow-lg">
+              <LogIn className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <CardTitle className="text-2xl">{t('login')}</CardTitle>
             <CardDescription>{t('welcomeBack')}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -100,7 +137,7 @@ function LoginForm() {
               )}
 
               {successMessage && (
-                <Alert>
+                <Alert className="border-green-500/50 bg-green-500/10 text-green-700 dark:text-green-400">
                   <AlertDescription>{successMessage}</AlertDescription>
                 </Alert>
               )}
@@ -110,10 +147,12 @@ function LoginForm() {
                 <Input
                   id="email"
                   type="email"
+                  placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={loading}
+                  className="h-11 bg-background/50"
                 />
               </div>
 
@@ -122,11 +161,13 @@ function LoginForm() {
                 <Input
                   id="password"
                   type="password"
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={loading}
-                  autoComplete="off"
+                  autoComplete="current-password"
+                  className="h-11 bg-background/50"
                 />
               </div>
 
@@ -144,7 +185,11 @@ function LoginForm() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full h-11 text-base font-medium shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
+                disabled={loading}
+              >
                 {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 {t('signIn')}
               </Button>

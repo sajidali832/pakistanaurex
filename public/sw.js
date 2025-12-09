@@ -1,12 +1,9 @@
 const CACHE_NAME = 'aurex-v1';
 const STATIC_ASSETS = [
   '/',
-  '/dashboard',
-  '/login',
-  '/register',
   '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/icons/icon-192x192.svg',
+  '/icons/icon-512x512.svg'
 ];
 
 // Install event - cache static assets
@@ -37,7 +34,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
-  
+
   // Skip API requests - always fetch from network
   if (event.request.url.includes('/api/')) return;
 
