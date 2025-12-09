@@ -158,99 +158,99 @@ function TaxInvoiceDetailContent({ id }: { id: string }) {
             <Card className="print:shadow-none print:border-none overflow-hidden">
                 <CardContent className="p-8 print:p-4">
                     {/* Header */}
-                    <div className="text-center border-b-2 border-black pb-4 mb-4">
-                        <h1 className="text-xl font-bold text-blue-800">Sales Tax Invoice</h1>
+                    <div className="text-center border-b-2 border-primary pb-4 mb-4">
+                        <h1 className="text-xl font-bold text-primary">Sales Tax Invoice</h1>
                     </div>
 
                     {/* Company Details */}
-                    <div className="text-center mb-4 bg-gray-100 p-4 rounded">
-                        <h2 className="text-lg font-bold">{company?.name}</h2>
+                    <div className="text-center mb-4 bg-primary/10 dark:bg-primary/20 p-4 rounded-lg">
+                        <h2 className="text-lg font-bold text-foreground">{company?.name}</h2>
                         {company?.nameUrdu && (
-                            <p className="text-base" dir="rtl">{company.nameUrdu}</p>
+                            <p className="text-base text-foreground" dir="rtl">{company.nameUrdu}</p>
                         )}
-                        <p className="text-sm">{company?.address}, {company?.city}</p>
+                        <p className="text-sm text-muted-foreground">{company?.address}, {company?.city}</p>
                     </div>
 
                     {/* Registration Numbers */}
                     <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                        <div className="border p-2">
-                            <span className="font-medium">NTN: </span>
-                            <span>{company?.ntnNumber || 'N/A'}</span>
+                        <div className="border border-border bg-muted/30 p-2 rounded">
+                            <span className="font-medium text-primary">NTN: </span>
+                            <span className="text-foreground">{company?.ntnNumber || 'N/A'}</span>
                         </div>
-                        <div className="border p-2 text-right">
-                            <span className="font-medium">Sales Tax Registration #: </span>
-                            <span>{company?.strnNumber || 'N/A'}</span>
+                        <div className="border border-border bg-muted/30 p-2 rounded text-right">
+                            <span className="font-medium text-primary">Sales Tax Registration #: </span>
+                            <span className="text-foreground">{company?.strnNumber || 'N/A'}</span>
                         </div>
                     </div>
 
                     {/* Invoice Details */}
                     <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div className="border p-2 text-sm">
-                            <div><span className="font-medium">Serial No: </span>{invoice.serialNumber}</div>
+                        <div className="border border-border p-2 text-sm rounded bg-accent/30">
+                            <div><span className="font-medium text-primary">Serial No: </span><span className="text-foreground">{invoice.serialNumber}</span></div>
                         </div>
-                        <div className="border p-2 text-sm text-right">
-                            <div><span className="font-medium">Date: </span>{formatDate(invoice.issueDate, language)}</div>
+                        <div className="border border-border p-2 text-sm text-right rounded bg-accent/30">
+                            <div><span className="font-medium text-primary">Date: </span><span className="text-foreground">{formatDate(invoice.issueDate, language)}</span></div>
                         </div>
                     </div>
 
                     {/* Buyer Details */}
-                    <div className="border p-3 mb-4 text-sm">
+                    <div className="border border-border p-3 mb-4 text-sm rounded-lg bg-muted/20">
                         <div className="grid grid-cols-2 gap-2">
-                            <div><span className="font-medium">Buyer's Name: </span>{invoice.buyerName}</div>
-                            <div><span className="font-medium">NTN #: </span>{invoice.buyerNtn || 'N/A'}</div>
-                            <div><span className="font-medium">Address: </span>{invoice.buyerAddress || 'N/A'}</div>
-                            <div><span className="font-medium">Sales Tax Registration #: </span>{invoice.buyerStrn || 'N/A'}</div>
+                            <div><span className="font-medium text-primary">Buyer's Name: </span><span className="text-foreground">{invoice.buyerName}</span></div>
+                            <div><span className="font-medium text-primary">NTN #: </span><span className="text-foreground">{invoice.buyerNtn || 'N/A'}</span></div>
+                            <div><span className="font-medium text-primary">Address: </span><span className="text-foreground">{invoice.buyerAddress || 'N/A'}</span></div>
+                            <div><span className="font-medium text-primary">Sales Tax Registration #: </span><span className="text-foreground">{invoice.buyerStrn || 'N/A'}</span></div>
                         </div>
                     </div>
 
                     {/* Line Items Table */}
-                    <Table className="border">
+                    <Table className="border border-border rounded-lg overflow-hidden">
                         <TableHeader>
-                            <TableRow className="bg-gray-200">
-                                <TableHead className="border text-center font-bold text-black w-12">S.No</TableHead>
-                                <TableHead className="border font-bold text-black">Description of Goods</TableHead>
-                                <TableHead className="border text-center font-bold text-black w-16">Qty</TableHead>
-                                <TableHead className="border text-center font-bold text-black w-24">Rate</TableHead>
-                                <TableHead className="border text-center font-bold text-black w-28">Value Excl. Sales Tax</TableHead>
-                                <TableHead className="border text-center font-bold text-black w-16">Rate of Sales Tax</TableHead>
-                                <TableHead className="border text-center font-bold text-black w-28">Sales Tax Payable</TableHead>
-                                <TableHead className="border text-center font-bold text-black w-28">Value Incl. Sales Tax</TableHead>
+                            <TableRow className="bg-primary/90 dark:bg-primary/80">
+                                <TableHead className="border border-border/50 text-center font-bold text-primary-foreground w-12">S.No</TableHead>
+                                <TableHead className="border border-border/50 font-bold text-primary-foreground">Description of Goods</TableHead>
+                                <TableHead className="border border-border/50 text-center font-bold text-primary-foreground w-16">Qty</TableHead>
+                                <TableHead className="border border-border/50 text-center font-bold text-primary-foreground w-24">Rate</TableHead>
+                                <TableHead className="border border-border/50 text-center font-bold text-primary-foreground w-28">Value Excl. Tax</TableHead>
+                                <TableHead className="border border-border/50 text-center font-bold text-primary-foreground w-16">Tax Rate</TableHead>
+                                <TableHead className="border border-border/50 text-center font-bold text-primary-foreground w-28">Tax Payable</TableHead>
+                                <TableHead className="border border-border/50 text-center font-bold text-primary-foreground w-28">Value Incl. Tax</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {invoice.lineItems?.map((line) => (
-                                <TableRow key={line.id}>
-                                    <TableCell className="border text-center">{line.serialNo}</TableCell>
-                                    <TableCell className="border">{line.description}</TableCell>
-                                    <TableCell className="border text-center">{line.quantity}</TableCell>
-                                    <TableCell className="border text-right">{formatCurrency(line.rate, language)}</TableCell>
-                                    <TableCell className="border text-right">{formatCurrency(line.valueExclTax, language)}</TableCell>
-                                    <TableCell className="border text-center">{line.taxRate}%</TableCell>
-                                    <TableCell className="border text-right">{formatCurrency(line.taxPayable, language)}</TableCell>
-                                    <TableCell className="border text-right font-medium">{formatCurrency(line.valueInclTax, language)}</TableCell>
+                                <TableRow key={line.id} className="hover:bg-muted/50">
+                                    <TableCell className="border border-border text-center text-foreground">{line.serialNo}</TableCell>
+                                    <TableCell className="border border-border text-foreground">{line.description}</TableCell>
+                                    <TableCell className="border border-border text-center text-foreground">{line.quantity}</TableCell>
+                                    <TableCell className="border border-border text-right text-foreground">{formatCurrency(line.rate, language)}</TableCell>
+                                    <TableCell className="border border-border text-right text-foreground">{formatCurrency(line.valueExclTax, language)}</TableCell>
+                                    <TableCell className="border border-border text-center text-orange-600 dark:text-orange-400">{line.taxRate}%</TableCell>
+                                    <TableCell className="border border-border text-right text-orange-600 dark:text-orange-400 font-medium">{formatCurrency(line.taxPayable, language)}</TableCell>
+                                    <TableCell className="border border-border text-right font-bold text-primary">{formatCurrency(line.valueInclTax, language)}</TableCell>
                                 </TableRow>
                             ))}
                             {/* Empty rows for typical invoice appearance */}
                             {invoice.lineItems?.length < 5 && Array.from({ length: 5 - invoice.lineItems.length }).map((_, i) => (
                                 <TableRow key={`empty-${i}`}>
-                                    <TableCell className="border h-8">&nbsp;</TableCell>
-                                    <TableCell className="border">&nbsp;</TableCell>
-                                    <TableCell className="border">&nbsp;</TableCell>
-                                    <TableCell className="border">&nbsp;</TableCell>
-                                    <TableCell className="border">&nbsp;</TableCell>
-                                    <TableCell className="border">&nbsp;</TableCell>
-                                    <TableCell className="border">&nbsp;</TableCell>
-                                    <TableCell className="border">&nbsp;</TableCell>
+                                    <TableCell className="border border-border h-8 text-muted-foreground">&nbsp;</TableCell>
+                                    <TableCell className="border border-border text-muted-foreground">&nbsp;</TableCell>
+                                    <TableCell className="border border-border text-muted-foreground">&nbsp;</TableCell>
+                                    <TableCell className="border border-border text-muted-foreground">&nbsp;</TableCell>
+                                    <TableCell className="border border-border text-muted-foreground">&nbsp;</TableCell>
+                                    <TableCell className="border border-border text-muted-foreground">&nbsp;</TableCell>
+                                    <TableCell className="border border-border text-muted-foreground">&nbsp;</TableCell>
+                                    <TableCell className="border border-border text-muted-foreground">&nbsp;</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                         <TableFooter>
-                            <TableRow className="bg-gray-100">
-                                <TableCell className="border font-bold" colSpan={4}>Total</TableCell>
-                                <TableCell className="border text-right font-bold">{formatCurrency(invoice.totalExclTax, language)}</TableCell>
-                                <TableCell className="border"></TableCell>
-                                <TableCell className="border text-right font-bold">{formatCurrency(invoice.totalTax, language)}</TableCell>
-                                <TableCell className="border text-right font-bold text-lg">{formatCurrency(invoice.total, language)}</TableCell>
+                            <TableRow className="bg-primary/10 dark:bg-primary/20">
+                                <TableCell className="border border-border font-bold text-foreground" colSpan={4}>Total</TableCell>
+                                <TableCell className="border border-border text-right font-bold text-foreground">{formatCurrency(invoice.totalExclTax, language)}</TableCell>
+                                <TableCell className="border border-border"></TableCell>
+                                <TableCell className="border border-border text-right font-bold text-orange-600 dark:text-orange-400">{formatCurrency(invoice.totalTax, language)}</TableCell>
+                                <TableCell className="border border-border text-right font-bold text-lg text-primary">{formatCurrency(invoice.total, language)}</TableCell>
                             </TableRow>
                         </TableFooter>
                     </Table>
@@ -258,8 +258,8 @@ function TaxInvoiceDetailContent({ id }: { id: string }) {
                     {/* Signature */}
                     <div className="flex justify-end mt-16 pt-8">
                         <div className="text-center">
-                            <div className="border-t border-black w-48 mb-2"></div>
-                            <span className="text-sm">Authorized Signature</span>
+                            <div className="border-t-2 border-foreground w-48 mb-2"></div>
+                            <span className="text-sm text-muted-foreground">Authorized Signature</span>
                         </div>
                     </div>
                 </CardContent>

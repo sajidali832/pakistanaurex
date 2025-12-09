@@ -24,7 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ArrowLeft, Edit, Printer, MoreHorizontal, CheckCircle, XCircle, FileText, Loader2 } from 'lucide-react';
+import { ArrowLeft, Edit, Printer, MoreHorizontal, CheckCircle, XCircle, FileText, Loader2, Download } from 'lucide-react';
 
 interface Quotation {
   id: number;
@@ -77,6 +77,8 @@ interface Company {
 }
 
 import { generateQuotationDoc } from '@/lib/generateQuotationDoc';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 function QuotationDetailContent({ id }: { id: string }) {
   const { t, language } = useI18n();
@@ -196,10 +198,129 @@ function QuotationDetailContent({ id }: { id: string }) {
     }
   };
 
-  const handleDownloadWord = async () => {
-    if (quotation && client) {
-      await generateQuotationDoc(quotation, lines, client, company);
+  const handleDownloadPDF = async () => {
+    if (!quotation || !client) return;
+
+    const doc = new jsPDF();
+
+    // Header
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text(company?.name || 'Company', 20, 25);
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(company?.address || '', 20, 32);
+    doc.text(`${company?.city || ''} | ${company?.phone || ''}`, 20, 38);
+    if (company?.ntnNumber) {
+      doc.text(`NTN: ${company.ntnNumber}`, 20, 44);
     }
+
+    // QUOTATION title
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 102, 204);
+    doc.text('QUOTATION', 145, 25);
+    doc.setFontSize(11);
+    doc.setTextColor(0, 0, 0);
+    doc.text(quotation.quotationNumber, 145, 33);
+    doc.text(`Status: ${quotation.status.toUpperCase()}`, 145, 40);
+
+    // Separator line
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, 50, 190, 50);
+
+    // Client info
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(100, 100, 100);
+    doc.text('PREPARED FOR', 20, 60);
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    doc.text(client.name, 20, 67);
+    doc.setFontSize(10);
+    doc.text(client.address || '', 20, 73);
+    doc.text(client.city || '', 20, 79);
+    doc.text(client.phone || '', 20, 85);
+
+    // Dates
+    doc.setFontSize(10);
+    doc.text(`Issue Date: ${quotation.issueDate}`, 140, 67);
+    if (quotation.validUntil) {
+      doc.text(`Valid Until: ${quotation.validUntil}`, 140, 74);
+    }
+
+    // Table data
+    const tableData = lines.map((line, index) => [
+      (index + 1).toString(),
+      line.description,
+      line.quantity.toString(),
+      `PKR ${line.unitPrice.toLocaleString()}`,
+      `${line.taxRate}%`,
+      `PKR ${line.lineTotal.toLocaleString()}`
+    ]);
+
+    // @ts-ignore - jspdf-autotable extends jsPDF
+    doc.autoTable({
+      startY: 95,
+      head: [['#', 'Description', 'Qty', 'Unit Price', 'Tax', 'Total']],
+      body: tableData,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [0, 102, 204],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      styles: { fontSize: 10 },
+      columnStyles: {
+        0: { cellWidth: 15 },
+        1: { cellWidth: 'auto' },
+        2: { cellWidth: 20, halign: 'right' },
+        3: { cellWidth: 35, halign: 'right' },
+        4: { cellWidth: 20, halign: 'right' },
+        5: { cellWidth: 35, halign: 'right' }
+      }
+    });
+
+    // @ts-ignore
+    const finalY = doc.lastAutoTable.finalY + 10;
+
+    // Totals
+    doc.setFontSize(10);
+    doc.text('Subtotal:', 130, finalY);
+    doc.text(`PKR ${quotation.subtotal.toLocaleString()}`, 160, finalY, { align: 'right' });
+
+    doc.text('Tax:', 130, finalY + 7);
+    doc.text(`PKR ${quotation.taxAmount.toLocaleString()}`, 160, finalY + 7, { align: 'right' });
+
+    if (quotation.discountAmount > 0) {
+      doc.text('Discount:', 130, finalY + 14);
+      doc.text(`-PKR ${quotation.discountAmount.toLocaleString()}`, 160, finalY + 14, { align: 'right' });
+    }
+
+    doc.setDrawColor(200, 200, 200);
+    doc.line(130, finalY + 18, 190, finalY + 18);
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Grand Total:', 130, finalY + 26);
+    doc.text(`PKR ${quotation.total.toLocaleString()}`, 160, finalY + 26, { align: 'right' });
+
+    // Terms
+    if (quotation.terms) {
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Terms & Conditions', 20, finalY + 45);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      const splitTerms = doc.splitTextToSize(quotation.terms, 170);
+      doc.text(splitTerms, 20, finalY + 52);
+    }
+
+    // Save
+    doc.save(`${quotation.quotationNumber}.pdf`);
   };
 
   const getStatusBadge = (status: string) => {
@@ -263,9 +384,9 @@ function QuotationDetailContent({ id }: { id: string }) {
               {t('edit')}
             </Button>
           </Link>
-          <Button variant="outline" onClick={handleDownloadWord}>
-            <FileText className="h-4 w-4 mr-2" />
-            Download Word
+          <Button variant="outline" onClick={handleDownloadPDF}>
+            <Download className="h-4 w-4 mr-2" />
+            Download PDF
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
