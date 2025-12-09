@@ -4,16 +4,16 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from '@/lib/auth-client';
-import { AurexLogo } from '@/components/AurexLogo';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { PublicHeader } from '@/components/PublicHeader';
+import { PublicFooter } from '@/components/PublicFooter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { GlowingEffect } from '@/components/ui/glowing-effect';
 import {
   FileText,
   Users,
   Package,
   BarChart3,
-  Building2,
   Globe,
   CheckCircle2,
   ArrowRight,
@@ -33,12 +33,7 @@ const features = [
     description: 'Create professional invoices in seconds. Customize templates, automate recurring billing, and get paid faster.',
     color: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
   },
-  {
-    icon: Package,
-    title: 'Inventory Tracking',
-    description: 'Keep track of stock levels in real-time. Get low stock alerts and manage multiple warehouses effortlessly.',
-    color: 'bg-green-500/10 text-green-600 dark:text-green-400',
-  },
+
   {
     icon: Users,
     title: 'Client CRM',
@@ -57,12 +52,7 @@ const features = [
     description: 'Track every penny. Categorize expenses, scan receipts, and monitor your cash flow with precision.',
     color: 'bg-pink-500/10 text-pink-600 dark:text-pink-400',
   },
-  {
-    icon: Globe,
-    title: 'Multi-Currency',
-    description: 'Do business globally. Send invoices and accept payments in multiple currencies with real-time conversion.',
-    color: 'bg-teal-500/10 text-teal-600 dark:text-teal-400',
-  },
+
 ];
 
 const benefits = [
@@ -103,26 +93,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/20">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <AurexLogo size="md" variant="full" />
-            <div className="flex items-center gap-4">
-              <ThemeToggle />
-              <Link href="/login" className="hidden sm:block">
-                <Button variant="ghost" className="font-medium">
-                  Log in
-                </Button>
-              </Link>
-              <Link href="/register">
-                <Button className="font-semibold shadow-lg shadow-primary/20">
-                  Get Started
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <PublicHeader />
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -232,19 +203,30 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {features.map((feature, index) => (
-              <Card key={index} className="border border-border/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-card/50 backdrop-blur-sm">
-                <CardContent className="p-8">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${feature.color}`}>
-                    <feature.icon className="h-7 w-7" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {feature.description}
-                  </p>
-                </CardContent>
-              </Card>
+              <div key={index} className="relative h-full rounded-[1.25rem] border border-transparent p-1">
+                <GlowingEffect
+                  blur={0}
+                  borderWidth={3}
+                  spread={80}
+                  glow={true}
+                  disabled={false}
+                  proximity={64}
+                  inactiveZone={0.01}
+                />
+                <Card className="relative z-10 h-full bg-card border border-border/50 shadow-sm rounded-2xl group overflow-hidden">
+                  <CardContent className="p-8">
+                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 ${feature.color} ring-1 ring-inset ring-black/5 dark:ring-white/10 group-hover:scale-110 transition-transform duration-500`}>
+                      <feature.icon className="h-7 w-7" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed group-hover:text-foreground/80 transition-colors">
+                      {feature.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
             ))}
           </div>
         </div>
@@ -374,24 +356,8 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t bg-muted/20">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="flex items-center gap-2">
-              <AurexLogo size="md" variant="full" />
-            </div>
-            <div className="flex gap-8 text-sm text-muted-foreground">
-              <Link href="#" className="hover:text-foreground transition-colors">Privacy</Link>
-              <Link href="#" className="hover:text-foreground transition-colors">Terms</Link>
-              <Link href="#" className="hover:text-foreground transition-colors">Support</Link>
-              <Link href="#" className="hover:text-foreground transition-colors">Contact</Link>
-            </div>
-          </div>
-          <div className="mt-8 text-center md:text-left text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Aurex. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      {/* Footer */}
+      <PublicFooter />
     </div>
   );
 }

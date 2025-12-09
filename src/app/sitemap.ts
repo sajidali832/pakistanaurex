@@ -1,7 +1,15 @@
 import { MetadataRoute } from 'next'
+import { blogPosts } from '@/lib/blogData'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-    const baseUrl = 'https://aurex.company'
+    const baseUrl = 'https://aurex.sbs'
+
+    const blogUrls = blogPosts.map((post) => ({
+        url: `${baseUrl}/blog/${post.slug}`,
+        lastModified: new Date(post.date),
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+    }))
 
     return [
         {
@@ -22,6 +30,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: 'monthly',
             priority: 0.9,
         },
-        // Add other public pages here as you create them
+        {
+            url: `${baseUrl}/blog`,
+            lastModified: new Date(),
+            changeFrequency: 'daily',
+            priority: 0.8,
+        },
+        ...blogUrls,
     ]
 }
