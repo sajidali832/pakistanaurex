@@ -64,14 +64,19 @@ function ClientsContent() {
 
   const fetchClients = async () => {
     try {
-      const token = localStorage.getItem('bearer_token');
-      const res = await fetch('/api/clients?limit=100', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      const res = await fetch('/api/clients?limit=100');
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('Failed to fetch clients:', res.status, text);
+        setClients([]);
+        return;
+      }
+
       const data = await res.json();
       setClients(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Failed to fetch:', error);
+      console.error('Failed to fetch clients:', error);
     } finally {
       setLoading(false);
     }
@@ -80,15 +85,21 @@ function ClientsContent() {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      const token = localStorage.getItem('bearer_token');
-      await fetch(`/api/clients?id=${deleteId}`, { 
+      const res = await fetch(`/api/clients?id=${deleteId}`, { 
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
       });
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error('Delete failed:', res.status, text);
+        return;
+      }
+
       setClients(clients.filter(c => c.id !== deleteId));
     } catch (error) {
       console.error('Delete failed:', error);
     }
+
     setDeleteId(null);
   };
 
