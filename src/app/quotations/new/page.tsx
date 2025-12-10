@@ -200,12 +200,10 @@ function NewQuotationContent() {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem('bearer_token');
       const quotationRes = await fetch('/api/quotations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           companyId,
