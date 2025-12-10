@@ -194,32 +194,43 @@ function NewTaxInvoiceContent() {
 
         setSaving(true);
         try {
-            // Store in localStorage for now
-            const storedInvoices = localStorage.getItem('tax_invoices');
-            const invoices = storedInvoices ? JSON.parse(storedInvoices) : [];
-
-            const newInvoice = {
-                id: Date.now(),
+            const invoiceData = {
                 companyId,
                 clientId: parseInt(clientId),
-                serialNumber,
+                invoiceNumber: serialNumber,
                 issueDate,
                 status,
-                totalExclTax,
-                totalTax,
+                subtotal: totalExclTax,
+                taxAmount: totalTax,
+                discountAmount: 0,
                 total: grandTotal,
-                lineItems: lineItems,
-                buyerName: selectedClient?.name,
-                buyerAddress: selectedClient?.address,
-                buyerNtn: selectedClient?.ntnNumber,
-                buyerStrn: selectedClient?.salesTaxRegistration,
+                amountPaid: 0,
+                currency: 'PKR',
+                notes: `Buyer: ${selectedClient?.name}\nAddress: ${selectedClient?.address}\nNTN: ${selectedClient?.ntnNumber}\nSTRN: ${selectedClient?.salesTaxRegistration || ''}`,
+                terms: null,
             };
 
-            invoices.push(newInvoice);
-            localStorage.setItem('tax_invoices', JSON.stringify(invoices));
+            const res = await fetch('/api/tax-invoices', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(invoiceData),
+            });
 
-            toast.success('Sales Tax Invoice created successfully');
-            router.push('/tax-invoices');
+            if (res.status === 401) {
+                toast.error('Your session has expired. Please log in again.');
+                window.location.href = `/login?redirect_url=${encodeURIComponent('/tax-invoices/new')}`;
+                return;
+            }
+
+            if (res.ok) {
+                toast.success('Sales Tax Invoice created successfully');
+                router.push('/tax-invoices');
+            } else {
+                const error = await res.json();
+                toast.error(error.error || 'Failed to create tax invoice');
+            }
         } catch (error) {
             console.error('Save failed:', error);
             toast.error('Failed to create tax invoice');

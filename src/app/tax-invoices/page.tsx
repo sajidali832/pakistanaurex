@@ -38,12 +38,22 @@ import { toast } from 'sonner';
 
 interface TaxInvoice {
     id: number;
-    serialNumber: string;
+    invoiceNumber: string;
     clientId: number;
     total: number;
-    totalTax: number;
+    taxAmount: number;
     status: string;
     issueDate: string;
+    companyId: number;
+    subtotal?: number;
+    discountAmount?: number;
+    amountPaid?: number;
+    currency?: string;
+    notes?: string;
+    terms?: string;
+    createdBy?: number;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 interface Client {
@@ -69,24 +79,30 @@ function TaxInvoicesContent() {
 
     const fetchData = async () => {
         try {
-            // For now, we'll store tax invoices in localStorage since API doesn't exist yet
-            const storedInvoices = localStorage.getItem('tax_invoices');
-            const invoicesData = storedInvoices ? JSON.parse(storedInvoices) : [];
+            setLoading(true);
+
+            // Fetch tax invoices from API
+            const invoicesRes = await fetch('/api/tax-invoices');
+            if (invoicesRes.status === 401) {
+                toast.error('Your session has expired. Please log in again.');
+                window.location.href = `/login?redirect_url=${encodeURIComponent('/tax-invoices')}`;
+                return;
+            }
+            const invoicesData = await invoicesRes.json();
 
             const clientsRes = await fetch('/api/clients');
-
             if (clientsRes.status === 401) {
                 toast.error('Your session has expired. Please log in again.');
                 window.location.href = `/login?redirect_url=${encodeURIComponent('/tax-invoices')}`;
                 return;
             }
-
             const clientsData = await clientsRes.json();
 
             setTaxInvoices(invoicesData);
-            setClients(Array.isArray(clientsData) ? clientsData : []);
+            setClients(clientsData);
         } catch (error) {
-            console.error('Failed to fetch:', error);
+            console.error('Failed to fetch data:', error);
+            toast.error('Failed to load data');
         } finally {
             setLoading(false);
         }
@@ -96,13 +112,25 @@ function TaxInvoicesContent() {
         if (!deleteId) return;
 
         try {
-            const storedInvoices = localStorage.getItem('tax_invoices');
-            const invoices = storedInvoices ? JSON.parse(storedInvoices) : [];
-            const updated = invoices.filter((inv: TaxInvoice) => inv.id !== deleteId);
-            localStorage.setItem('tax_invoices', JSON.stringify(updated));
-            setTaxInvoices(updated);
+            const res = await fetch(`/api/tax-invoices?id=${deleteId}`, {
+                method: 'DELETE',
+            });
+
+            if (res.status === 401) {
+                toast.error('Your session has expired. Please log in again.');
+                window.location.href = `/login?redirect_url=${encodeURIComponent('/tax-invoices')}`;
+                return;
+            }
+
+            if (res.ok) {
+                setTaxInvoices(prev => prev.filter(inv => inv.id !== deleteId));
+                toast.success('Tax invoice deleted successfully');
+            } else {
+                toast.error('Failed to delete tax invoice');
+            }
         } catch (error) {
             console.error('Delete failed:', error);
+            toast.error('Failed to delete tax invoice');
         } finally {
             setDeleteId(null);
         }
@@ -124,7 +152,7 @@ function TaxInvoicesContent() {
     };
 
     const filteredInvoices = taxInvoices.filter(invoice =>
-        invoice.serialNumber.toLowerCase().includes(search.toLowerCase()) ||
+        invoice.invoiceNumber.toLowerCase().includes(search.toLowerCase()) ||
         getClientName(invoice.clientId).toLowerCase().includes(search.toLowerCase())
     );
 
@@ -186,10 +214,10 @@ function TaxInvoicesContent() {
                             <TableBody>
                                 {filteredInvoices.map((invoice) => (
                                     <TableRow key={invoice.id}>
-                                        <TableCell className="font-medium">{invoice.serialNumber}</TableCell>
+                                        <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
                                         <TableCell>{getClientName(invoice.clientId)}</TableCell>
                                         <TableCell>{formatDate(invoice.issueDate, language)}</TableCell>
-                                        <TableCell className="text-right">{formatCurrency(invoice.totalTax, language)}</TableCell>
+                                        <TableCell className="text-right">{formatCurrency(invoice.taxAmount, language)}</TableCell>
                                         <TableCell className="text-right font-medium">{formatCurrency(invoice.total, language)}</TableCell>
                                         <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                                         <TableCell>
