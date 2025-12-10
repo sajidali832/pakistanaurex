@@ -108,6 +108,15 @@ function NewInvoiceContent() {
         const text = await companyRes.text();
         console.error('Failed to fetch company for invoices:', companyRes.status, text);
         setCompanySettings(null);
+        
+        // Fallback defaults when company fetch fails
+        const dueDateObj = new Date();
+        dueDateObj.setDate(dueDateObj.getDate() + 30);
+        setDueDate(dueDateObj.toISOString().split('T')[0]);
+        setTerms('Payment due within 30 days');
+        setLineItems([
+          { id: '1', description: '', quantity: 1, unitPrice: 0, taxRate: 17, taxAmount: 0, lineTotal: 0 }
+        ]);
       } else {
         const company = await companyRes.json();
         setCompanySettings(company);
@@ -134,16 +143,6 @@ function NewInvoiceContent() {
         // Initialize line items with company's default tax rate
         setLineItems([
           { id: '1', description: '', quantity: 1, unitPrice: 0, taxRate: defaultTaxRate, taxAmount: 0, lineTotal: 0 }
-        ]);
-      } else {
-        // Fallback defaults
-        const dueDateObj = new Date();
-        dueDateObj.setDate(dueDateObj.getDate() + 30);
-
-        setDueDate(dueDateObj.toISOString().split('T')[0]);
-        setTerms('Payment due within 30 days');
-        setLineItems([
-          { id: '1', description: '', quantity: 1, unitPrice: 0, taxRate: 17, taxAmount: 0, lineTotal: 0 }
         ]);
       }
     } catch (error) {
