@@ -133,13 +133,6 @@ function NewInvoiceContent() {
         // Set default terms
         setTerms(`Payment due within ${paymentTermsDays} days`);
 
-        // Check if company settings are complete
-        if (!company.name || !company.address || !company.ntnNumber) {
-          toast.error('Please complete your company settings before creating invoices');
-          router.push('/settings');
-          return;
-        }
-
         // Initialize line items with company's default tax rate
         setLineItems([
           { id: '1', description: '', quantity: 1, unitPrice: 0, taxRate: defaultTaxRate, taxAmount: 0, lineTotal: 0 }

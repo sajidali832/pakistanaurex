@@ -48,8 +48,6 @@ interface QuotationLine {
   description: string;
   quantity: number;
   unitPrice: number;
-  taxRate: number;
-  taxAmount: number;
   lineTotal: number;
 }
 
@@ -258,14 +256,13 @@ function QuotationDetailContent({ id }: { id: string }) {
       line.description,
       line.quantity.toString(),
       `PKR ${line.unitPrice.toLocaleString()}`,
-      `${line.taxRate}%`,
       `PKR ${line.lineTotal.toLocaleString()}`
     ]);
 
     // @ts-ignore - jspdf-autotable extends jsPDF
     doc.autoTable({
       startY: 95,
-      head: [['#', 'Description', 'Qty', 'Unit Price', 'Tax', 'Total']],
+      head: [['#', 'Description', 'Qty', 'Unit Price', 'Total']],
       body: tableData,
       theme: 'striped',
       headStyles: {
@@ -279,8 +276,7 @@ function QuotationDetailContent({ id }: { id: string }) {
         1: { cellWidth: 'auto' },
         2: { cellWidth: 20, halign: 'right' },
         3: { cellWidth: 35, halign: 'right' },
-        4: { cellWidth: 20, halign: 'right' },
-        5: { cellWidth: 35, halign: 'right' }
+        4: { cellWidth: 35, halign: 'right' }
       }
     });
 
@@ -292,21 +288,19 @@ function QuotationDetailContent({ id }: { id: string }) {
     doc.text('Subtotal:', 130, finalY);
     doc.text(`PKR ${quotation.subtotal.toLocaleString()}`, 160, finalY, { align: 'right' });
 
-    doc.text('Tax:', 130, finalY + 7);
-    doc.text(`PKR ${quotation.taxAmount.toLocaleString()}`, 160, finalY + 7, { align: 'right' });
-
     if (quotation.discountAmount > 0) {
-      doc.text('Discount:', 130, finalY + 14);
-      doc.text(`-PKR ${quotation.discountAmount.toLocaleString()}`, 160, finalY + 14, { align: 'right' });
+      doc.text('Discount:', 130, finalY + 7);
+      doc.text(`-PKR ${quotation.discountAmount.toLocaleString()}`, 160, finalY + 7, { align: 'right' });
     }
 
+    const lineOffset = quotation.discountAmount > 0 ? 11 : 4;
     doc.setDrawColor(200, 200, 200);
-    doc.line(130, finalY + 18, 190, finalY + 18);
+    doc.line(130, finalY + lineOffset, 190, finalY + lineOffset);
 
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text('Grand Total:', 130, finalY + 26);
-    doc.text(`PKR ${quotation.total.toLocaleString()}`, 160, finalY + 26, { align: 'right' });
+    doc.text('Grand Total:', 130, finalY + lineOffset + 8);
+    doc.text(`PKR ${quotation.total.toLocaleString()}`, 160, finalY + lineOffset + 8, { align: 'right' });
 
     // Terms
     if (quotation.terms) {
@@ -467,7 +461,6 @@ function QuotationDetailContent({ id }: { id: string }) {
                 <TableHead>{t('description')}</TableHead>
                 <TableHead className="text-right">{t('quantity')}</TableHead>
                 <TableHead className="text-right">{t('unitPrice')}</TableHead>
-                <TableHead className="text-right">{t('tax')}</TableHead>
                 <TableHead className="text-right">{t('total')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -478,7 +471,6 @@ function QuotationDetailContent({ id }: { id: string }) {
                   <TableCell>{line.description}</TableCell>
                   <TableCell className="text-right">{line.quantity}</TableCell>
                   <TableCell className="text-right">{formatCurrency(line.unitPrice, language)}</TableCell>
-                  <TableCell className="text-right">{line.taxRate}%</TableCell>
                   <TableCell className="text-right">{formatCurrency(line.lineTotal, language)}</TableCell>
                 </TableRow>
               ))}
@@ -491,10 +483,6 @@ function QuotationDetailContent({ id }: { id: string }) {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t('subtotal')}</span>
                 <span>{formatCurrency(quotation.subtotal, language)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t('tax')}</span>
-                <span>{formatCurrency(quotation.taxAmount, language)}</span>
               </div>
               {quotation.discountAmount > 0 && (
                 <div className="flex justify-between">

@@ -56,8 +56,6 @@ interface LineItem {
   description: string;
   quantity: number;
   unitPrice: number;
-  taxRate: number;
-  taxAmount: number;
   lineTotal: number;
 }
 
@@ -121,16 +119,9 @@ function NewQuotationContent() {
         // Set default terms
         setTerms(`Valid for 15 days. Payment due within ${paymentTermsDays} days of acceptance.`);
 
-        // Check if company settings are complete
-        if (!company.name || !company.address || !company.ntnNumber) {
-          toast.error('Please complete your company settings before creating quotations');
-          router.push('/settings');
-          return;
-        }
-
-        // Initialize line items with company's default tax rate
+        // Initialize line items
         setLineItems([
-          { id: '1', description: '', quantity: 1, unitPrice: 0, taxRate: defaultTaxRate, taxAmount: 0, lineTotal: 0 }
+          { id: '1', description: '', quantity: 1, unitPrice: 0, lineTotal: 0 }
         ]);
       } else {
         // Fallback defaults
@@ -139,7 +130,7 @@ function NewQuotationContent() {
         setValidUntil(validUntilDate.toISOString().split('T')[0]);
         setTerms('Valid for 15 days. Payment due within 30 days of acceptance.');
         setLineItems([
-          { id: '1', description: '', quantity: 1, unitPrice: 0, taxRate: 17, taxAmount: 0, lineTotal: 0 }
+          { id: '1', description: '', quantity: 1, unitPrice: 0, lineTotal: 0 }
         ]);
       }
     } catch (error) {
@@ -156,10 +147,8 @@ function NewQuotationContent() {
   };
 
   const calculateLineItem = (item: LineItem): LineItem => {
-    const subtotal = item.quantity * item.unitPrice;
-    const taxAmount = subtotal * (item.taxRate / 100);
-    const lineTotal = subtotal + taxAmount;
-    return { ...item, taxAmount, lineTotal };
+    const lineTotal = item.quantity * item.unitPrice;
+    return { ...item, lineTotal };
   };
 
   const updateLineItem = (id: string, field: keyof LineItem, value: any) => {
@@ -173,10 +162,9 @@ function NewQuotationContent() {
   };
 
   const addLineItem = () => {
-    const defaultTaxRate = companySettings?.defaultTaxRate ?? 17;
     setLineItems([
       ...lineItems,
-      { id: Date.now().toString(), description: '', quantity: 1, unitPrice: 0, taxRate: defaultTaxRate, taxAmount: 0, lineTotal: 0 }
+      { id: Date.now().toString(), description: '', quantity: 1, unitPrice: 0, lineTotal: 0 }
     ]);
   };
 
@@ -189,8 +177,7 @@ function NewQuotationContent() {
 
 
   const subtotal = lineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-  const taxAmount = lineItems.reduce((sum, item) => sum + item.taxAmount, 0);
-  const total = subtotal + taxAmount - discountAmount;
+  const total = subtotal - discountAmount;
 
   const handleSave = async (status: string = 'draft') => {
     if (!clientId || !quotationNumber || !companyId) {
@@ -213,7 +200,7 @@ function NewQuotationContent() {
           validUntil: validUntil || null,
           status,
           subtotal,
-          taxAmount,
+          taxAmount: 0,
           discountAmount,
           total,
           currency: 'PKR',
@@ -232,15 +219,14 @@ function NewQuotationContent() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             quotationId: quotation.id,
             description: line.description,
             quantity: line.quantity,
             unitPrice: line.unitPrice,
-            taxRate: line.taxRate,
-            taxAmount: line.taxAmount,
+            taxRate: 0,
+            taxAmount: 0,
             lineTotal: line.lineTotal,
             sortOrder: i,
           }),
@@ -328,7 +314,6 @@ function NewQuotationContent() {
                     <TableHead>{t('description')}</TableHead>
                     <TableHead className="w-24">{t('quantity')}</TableHead>
                     <TableHead className="w-32">{t('unitPrice')}</TableHead>
-                    <TableHead className="w-24">{t('tax')} %</TableHead>
                     <TableHead className="w-32">{t('total')}</TableHead>
                     <TableHead className="w-12"></TableHead>
                   </TableRow>
@@ -359,15 +344,6 @@ function NewQuotationContent() {
                           onChange={(e) => updateLineItem(line.id, 'unitPrice', parseFloat(e.target.value) || 0)}
                         />
                       </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={line.taxRate}
-                          onChange={(e) => updateLineItem(line.id, 'taxRate', parseFloat(e.target.value) || 0)}
-                        />
-                      </TableCell>
                       <TableCell className="font-medium">
                         {formatCurrency(line.lineTotal, language)}
                       </TableCell>
@@ -386,7 +362,7 @@ function NewQuotationContent() {
                 </TableBody>
                 <TableFooter>
                   <TableRow>
-                    <TableCell colSpan={6}>
+                    <TableCell colSpan={5}>
                       <Button variant="ghost" size="sm" onClick={addLineItem}>
                         <Plus className="h-4 w-4 mr-2" />
                         {t('addItem')}
@@ -404,10 +380,6 @@ function NewQuotationContent() {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t('subtotal')}</span>
                 <span>{formatCurrency(subtotal, language)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t('tax')}</span>
-                <span>{formatCurrency(taxAmount, language)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">{t('discount')}</span>

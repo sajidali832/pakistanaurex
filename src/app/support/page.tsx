@@ -6,12 +6,18 @@ import AppLayout from "@/components/AppLayout";
 import { I18nProvider } from "@/lib/i18n";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Copy, Check } from "lucide-react";
 
 export default function SupportPage() {
   const router = useRouter();
+  const [copied, setCopied] = React.useState(false);
+  const email = "hello@aurex.sbs";
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(email);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <I18nProvider>
@@ -35,68 +41,33 @@ export default function SupportPage() {
               </p>
 
               <p>
-                The fastest way to get a response is to email us at
-                <a href="mailto:hello@aurex.sbs" className="text-primary font-medium ml-1">
-                  hello@aurex.sbs
-                </a>
-                . Please include as much detail as possible so we can help you quickly.
+                If you want to report a problem, suggest a feature, or need any help, email us at:
               </p>
 
-              <div className="mt-4 space-y-3 border-t pt-4">
-                <h2 className="text-base font-semibold text-foreground">Send us a message</h2>
-                <p>
-                  You can also draft your message here and send it using your email client.
-                  When you click <span className="font-semibold">Send via Email</span>, we will
-                  open your default mail app with the details filled in.
-                </p>
-
-                <SupportForm />
+              <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
+                <span className="text-lg font-medium text-foreground">{email}</span>
+                <Button variant="outline" size="sm" onClick={handleCopy}>
+                  {copied ? (
+                    <>
+                      <Check className="h-4 w-4 mr-1" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4 mr-1" />
+                      Copy
+                    </>
+                  )}
+                </Button>
               </div>
+
+              <p>
+                Please include as much detail as possible so we can help you quickly.
+              </p>
             </CardContent>
           </Card>
         </div>
       </AppLayout>
     </I18nProvider>
-  );
-}
-
-function SupportForm() {
-  const [subject, setSubject] = React.useState("");
-  const [message, setMessage] = React.useState("");
-
-  const handleSend = () => {
-    const encodedSubject = encodeURIComponent(subject || "Support request from AUREX");
-    const encodedBody = encodeURIComponent(message);
-    const mailto = `mailto:hello@aurex.sbs?subject=${encodedSubject}&body=${encodedBody}`;
-    window.location.href = mailto;
-  };
-
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="subject">Subject</Label>
-        <Input
-          id="subject"
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          placeholder="Brief summary of your issue"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="message">Message</Label>
-        <Textarea
-          id="message"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          rows={4}
-          placeholder="Describe the problem or question in detail..."
-        />
-      </div>
-      <div className="flex justify-end">
-        <Button onClick={handleSend} disabled={!subject && !message}>
-          Send via Email
-        </Button>
-      </div>
-    </div>
   );
 }
