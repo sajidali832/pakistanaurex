@@ -34,6 +34,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Plus, Search, MoreHorizontal, Eye, Edit, Trash2, FileDown, Receipt } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface TaxInvoice {
     id: number;
@@ -68,15 +69,18 @@ function TaxInvoicesContent() {
 
     const fetchData = async () => {
         try {
-            const token = localStorage.getItem('bearer_token');
-
             // For now, we'll store tax invoices in localStorage since API doesn't exist yet
             const storedInvoices = localStorage.getItem('tax_invoices');
             const invoicesData = storedInvoices ? JSON.parse(storedInvoices) : [];
 
-            const clientsRes = await fetch('/api/clients', {
-                headers: { 'Authorization': `Bearer ${token}` },
-            });
+            const clientsRes = await fetch('/api/clients');
+
+            if (clientsRes.status === 401) {
+                toast.error('Your session has expired. Please log in again.');
+                window.location.href = `/login?redirect_url=${encodeURIComponent('/tax-invoices')}`;
+                return;
+            }
+
             const clientsData = await clientsRes.json();
 
             setTaxInvoices(invoicesData);

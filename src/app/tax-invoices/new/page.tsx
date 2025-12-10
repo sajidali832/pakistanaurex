@@ -95,15 +95,17 @@ function NewTaxInvoiceContent() {
 
     const fetchData = async () => {
         try {
-            const token = localStorage.getItem('bearer_token');
             const [clientsRes, companiesRes] = await Promise.all([
-                fetch('/api/clients', {
-                    headers: { 'Authorization': `Bearer ${token}` },
-                }),
-                fetch('/api/companies', {
-                    headers: { 'Authorization': `Bearer ${token}` },
-                }),
+                fetch('/api/clients'),
+                fetch('/api/companies'),
             ]);
+
+            if (clientsRes.status === 401 || companiesRes.status === 401) {
+                toast.error('Your session has expired. Please log in again.');
+                window.location.href = `/login?redirect_url=${encodeURIComponent('/tax-invoices/new')}`;
+                return;
+            }
+
             const clientsData = await clientsRes.json();
             const companiesData = await companiesRes.json();
 
