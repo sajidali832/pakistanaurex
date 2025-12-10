@@ -15,20 +15,40 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const [currentUser] = await db
+    const existingUser = await db
       .select()
       .from(user)
       .where(eq(user.id, userId))
       .limit(1);
 
-    if (!currentUser || !currentUser.companyId) {
+    // Ensure we have a user row; if not, create one with a unique placeholder email
+    let currentUser = existingUser;
+    if (currentUser.length === 0) {
+      const placeholderEmail = `${userId}@placeholder.local`;
+
+      const newUser = await db
+        .insert(user)
+        .values({
+          id: userId,
+          name: 'User',
+          email: placeholderEmail,
+          emailVerified: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+
+      currentUser = newUser;
+    }
+
+    if (!currentUser[0].companyId) {
       return NextResponse.json(
         { error: 'User has no company associated', code: 'NO_COMPANY' },
         { status: 400 }
       );
     }
 
-    const companyIdFromUser = currentUser.companyId;
+    const companyIdFromUser = currentUser[0].companyId;
 
     const searchParams = request.nextUrl.searchParams;
 

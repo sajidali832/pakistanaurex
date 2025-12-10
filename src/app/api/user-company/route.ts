@@ -24,12 +24,16 @@ export async function GET(request: NextRequest) {
 
     // If no user record exists, create one (first time Clerk user logs in)
     if (currentUser.length === 0) {
+      // Use a deterministic placeholder email based on userId so it is
+      // non-empty and unique, satisfying NOT NULL + UNIQUE constraints.
+      const placeholderEmail = `${userId}@placeholder.local`;
+
       const newUser = await db
         .insert(user)
         .values({
           id: userId,
           name: 'User',
-          email: '',
+          email: placeholderEmail,
           emailVerified: false,
           createdAt: new Date(),
           updatedAt: new Date(),
