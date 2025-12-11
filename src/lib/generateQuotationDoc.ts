@@ -6,7 +6,6 @@ interface Quotation {
     issueDate: string;
     validUntil: string;
     subtotal: number;
-    taxAmount: number;
     discountAmount: number;
     total: number;
     notes: string;
@@ -17,7 +16,6 @@ interface QuotationLine {
     description: string;
     quantity: number;
     unitPrice: number;
-    taxRate: number;
     lineTotal: number;
 }
 
@@ -164,7 +162,6 @@ export const generateQuotationDoc = async (
                                     new TableCell({
                                         children: [
                                             new Paragraph({ text: `Subtotal: ${formatCurrencyPKR(quotation.subtotal)}`, alignment: AlignmentType.RIGHT }),
-                                            new Paragraph({ text: `Tax: ${formatCurrencyPKR(quotation.taxAmount)}`, alignment: AlignmentType.RIGHT }),
                                             new Paragraph({ text: `Discount: ${formatCurrencyPKR(quotation.discountAmount)}`, alignment: AlignmentType.RIGHT }),
                                             new Paragraph({ children: [new TextRun({ text: `TOTAL: ${formatCurrencyPKR(quotation.total)}`, bold: true, size: 24, color: PRIMARY_COLOR })], alignment: AlignmentType.RIGHT }),
                                         ],

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/db';
-import { invoices, user } from '@/db/schema';
+import { taxInvoices, user } from '@/db/schema';
 import { eq, like, and, desc } from 'drizzle-orm';
 
 const VALID_STATUSES = ['draft', 'sent', 'paid', 'overdue', 'cancelled'] as const;
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
-    // Single invoice by ID
+    // Single tax invoice by ID
     if (id) {
       if (!id || isNaN(parseInt(id))) {
         return NextResponse.json(
@@ -32,23 +32,23 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      const invoice = await db
+      const taxInvoice = await db
         .select()
-        .from(invoices)
-        .where(and(eq(invoices.id, parseInt(id)), eq(invoices.companyId, companyIdFromUser)))
+        .from(taxInvoices)
+        .where(and(eq(taxInvoices.id, parseInt(id)), eq(taxInvoices.companyId, companyIdFromUser)))
         .limit(1);
 
-      if (invoice.length === 0) {
+      if (taxInvoice.length === 0) {
         return NextResponse.json(
-          { error: 'Invoice not found', code: 'INVOICE_NOT_FOUND' },
+          { error: 'Tax invoice not found', code: 'TAX_INVOICE_NOT_FOUND' },
           { status: 404 }
         );
       }
 
-      return NextResponse.json(invoice[0], { status: 200 });
+      return NextResponse.json(taxInvoice[0], { status: 200 });
     }
 
-    // List invoices with filters and pagination
+    // List tax invoices with filters and pagination
     const limit = Math.min(parseInt(searchParams.get('limit') ?? '10'), 100);
     const offset = parseInt(searchParams.get('offset') ?? '0');
     const search = searchParams.get('search');
@@ -56,30 +56,30 @@ export async function GET(request: NextRequest) {
     const clientId = searchParams.get('clientId');
     const status = searchParams.get('status');
 
-    let query = db.select().from(invoices);
+    let query = db.select().from(taxInvoices);
 
     const conditions = [];
 
     if (search) {
-      conditions.push(like(invoices.invoiceNumber, `%${search}%`));
+      conditions.push(like(taxInvoices.invoiceNumber, `%${search}%`));
     }
 
     if (companyId) {
       const companyIdInt = parseInt(companyId);
       if (!isNaN(companyIdInt)) {
-        conditions.push(eq(invoices.companyId, companyIdInt));
+        conditions.push(eq(taxInvoices.companyId, companyIdInt));
       }
     }
 
     if (clientId) {
       const clientIdInt = parseInt(clientId);
       if (!isNaN(clientIdInt)) {
-        conditions.push(eq(invoices.clientId, clientIdInt));
+        conditions.push(eq(taxInvoices.clientId, clientIdInt));
       }
     }
 
     if (status) {
-      conditions.push(eq(invoices.status, status));
+      conditions.push(eq(taxInvoices.status, status));
     }
 
     if (conditions.length > 0) {
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     }
 
     const results = await query
-      .orderBy(desc(invoices.createdAt))
+      .orderBy(desc(taxInvoices.createdAt))
       .limit(limit)
       .offset(offset);
 
@@ -103,6 +103,18 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // const { userId } = await auth();
+
+    // if (!userId) {
+    //   return NextResponse.json(
+    //     { error: 'Authentication required', code: 'UNAUTHORIZED' },
+    //     { status: 401 }
+    //   );
+    // }
+
+    // TEMP: Hardcode companyId for testing
+    const companyIdFromUser = 1;
+
     const body = await request.json();
 
     // Validate required fields
@@ -189,7 +201,7 @@ export async function POST(request: NextRequest) {
 
     const now = new Date().toISOString();
 
-    const invoiceData = {
+    const taxInvoiceData = {
       companyId: parseInt(body.companyId),
       clientId: parseInt(body.clientId),
       invoiceNumber: body.invoiceNumber.trim(),
@@ -209,9 +221,9 @@ export async function POST(request: NextRequest) {
       updatedAt: now,
     };
 
-    const newInvoice = await db.insert(invoices).values(invoiceData).returning();
+    const newTaxInvoice = await db.insert(taxInvoices).values(taxInvoiceData).returning();
 
-    return NextResponse.json(newInvoice[0], { status: 201 });
+    return NextResponse.json(newTaxInvoice[0], { status: 201 });
   } catch (error) {
     console.error('POST error:', error);
     return NextResponse.json(
@@ -247,16 +259,16 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
 
-    // Check if invoice exists
-    const existingInvoice = await db
+    // Check if tax invoice exists
+    const existingTaxInvoice = await db
       .select()
-      .from(invoices)
-      .where(eq(invoices.id, parseInt(id)))
+      .from(taxInvoices)
+      .where(eq(taxInvoices.id, parseInt(id)))
       .limit(1);
 
-    if (existingInvoice.length === 0) {
+    if (existingTaxInvoice.length === 0) {
       return NextResponse.json(
-        { error: 'Invoice not found', code: 'INVOICE_NOT_FOUND' },
+        { error: 'Tax invoice not found', code: 'TAX_INVOICE_NOT_FOUND' },
         { status: 404 }
       );
     }
@@ -346,13 +358,13 @@ export async function PUT(request: NextRequest) {
       updates.createdBy = body.createdBy !== null ? parseInt(body.createdBy) : null;
     }
 
-    const updatedInvoice = await db
-      .update(invoices)
+    const updatedTaxInvoice = await db
+      .update(taxInvoices)
       .set(updates)
-      .where(eq(invoices.id, parseInt(id)))
+      .where(eq(taxInvoices.id, parseInt(id)))
       .returning();
 
-    return NextResponse.json(updatedInvoice[0], { status: 200 });
+    return NextResponse.json(updatedTaxInvoice[0], { status: 200 });
   } catch (error) {
     console.error('PUT error:', error);
     return NextResponse.json(
@@ -364,6 +376,15 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    // const { userId } = await auth();
+
+    // if (!userId) {
+    //   return NextResponse.json(
+    //     { error: 'Authentication required', code: 'UNAUTHORIZED' },
+    //     { status: 401 }
+    //   );
+    // }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -374,29 +395,29 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Check if invoice exists
-    const existingInvoice = await db
+    // Check if tax invoice exists
+    const existingTaxInvoice = await db
       .select()
-      .from(invoices)
-      .where(eq(invoices.id, parseInt(id)))
+      .from(taxInvoices)
+      .where(eq(taxInvoices.id, parseInt(id)))
       .limit(1);
 
-    if (existingInvoice.length === 0) {
+    if (existingTaxInvoice.length === 0) {
       return NextResponse.json(
-        { error: 'Invoice not found', code: 'INVOICE_NOT_FOUND' },
+        { error: 'Tax invoice not found', code: 'TAX_INVOICE_NOT_FOUND' },
         { status: 404 }
       );
     }
 
     const deleted = await db
-      .delete(invoices)
-      .where(eq(invoices.id, parseInt(id)))
+      .delete(taxInvoices)
+      .where(eq(taxInvoices.id, parseInt(id)))
       .returning();
 
     return NextResponse.json(
       {
-        message: 'Invoice deleted successfully',
-        invoice: deleted[0],
+        message: 'Tax invoice deleted successfully',
+        taxInvoice: deleted[0],
       },
       { status: 200 }
     );

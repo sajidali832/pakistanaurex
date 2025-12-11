@@ -49,11 +49,15 @@ function SettingsContent() {
 
   const fetchCompany = async () => {
     try {
-      const token = localStorage.getItem('bearer_token');
-      const res = await fetch('/api/companies', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      const res = await fetch('/api/companies');
+
+      if (res.status === 401) {
+        toast.error('Your session has expired. Please log in again.');
+        window.location.href = `/login?redirect_url=${encodeURIComponent('/settings')}`;
+        return;
+      }
       const data = await res.json();
+
       if (Array.isArray(data) && data.length > 0) {
         setCompany(data[0]);
         setFormData(data[0]);
@@ -101,15 +105,12 @@ function SettingsContent() {
     
     setSaving(true);
     try {
-      const token = localStorage.getItem('bearer_token');
-      
       if (hasCompany && company) {
         // Update existing company
         await fetch(`/api/companies?id=${company.id}`, {
           method: 'PUT',
           headers: { 
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify(formData),
         });
@@ -121,14 +122,19 @@ function SettingsContent() {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             ...formData,
             createdAt: new Date().toISOString(),
           }),
         });
+        if (res.status === 401) {
+          toast.error('Your session has expired. Please log in again.');
+          window.location.href = `/login?redirect_url=${encodeURIComponent('/settings')}`;
+          return;
+        }
         const newCompany = await res.json();
+
         setCompany(newCompany);
         setHasCompany(true);
         toast.success('Company created successfully! You can now create invoices and quotations.');
@@ -146,12 +152,10 @@ function SettingsContent() {
     
     setSavingPrefs(true);
     try {
-      const token = localStorage.getItem('bearer_token');
       await fetch(`/api/companies?id=${company.id}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           defaultTaxRate: formData.defaultTaxRate,

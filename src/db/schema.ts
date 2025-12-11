@@ -168,6 +168,28 @@ export const invoiceLines = sqliteTable('invoice_lines', {
   sortOrder: integer('sort_order').notNull().default(0),
 });
 
+// Tax invoices table
+export const taxInvoices = sqliteTable('tax_invoices', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  companyId: integer('company_id').notNull().references(() => companies.id),
+  clientId: integer('client_id').notNull().references(() => clients.id),
+  invoiceNumber: text('invoice_number').notNull(),
+  issueDate: text('issue_date').notNull(),
+  dueDate: text('due_date'),
+  status: text('status').notNull().default('draft'),
+  subtotal: real('subtotal').notNull().default(0),
+  taxAmount: real('tax_amount').notNull().default(0),
+  discountAmount: real('discount_amount').notNull().default(0),
+  total: real('total').notNull().default(0),
+  amountPaid: real('amount_paid').notNull().default(0),
+  currency: text('currency').notNull().default('PKR'),
+  notes: text('notes'),
+  terms: text('terms'),
+  createdBy: integer('created_by').references(() => users.id),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+
 // Quotations table
 export const quotations = sqliteTable('quotations', {
   id: integer('id').primaryKey({ autoIncrement: true }),

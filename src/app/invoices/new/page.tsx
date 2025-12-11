@@ -124,13 +124,6 @@ function NewInvoiceContent() {
         // Set default terms
         setTerms(`Payment due within ${paymentTermsDays} days`);
 
-        // Check if company settings are complete
-        if (!company.name || !company.address || !company.ntnNumber) {
-          toast.error('Please complete your company settings before creating invoices');
-          router.push('/settings');
-          return;
-        }
-
         // Initialize line items with company's default tax rate
         setLineItems([
           { id: '1', description: '', quantity: 1, unitPrice: 0, taxRate: defaultTaxRate, taxAmount: 0, lineTotal: 0 }
@@ -179,8 +172,6 @@ function NewInvoiceContent() {
       setLineItems(lineItems.filter(item => item.id !== id));
     }
   };
-
-
 
   const subtotal = lineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
   const taxAmount = lineItems.reduce((sum, item) => sum + item.taxAmount, 0);

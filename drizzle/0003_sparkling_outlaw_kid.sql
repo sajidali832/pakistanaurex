@@ -1,0 +1,23 @@
+CREATE TABLE `tax_invoices` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`company_id` integer NOT NULL,
+	`client_id` integer NOT NULL,
+	`invoice_number` text NOT NULL,
+	`issue_date` text NOT NULL,
+	`due_date` text,
+	`status` text DEFAULT 'draft' NOT NULL,
+	`subtotal` real DEFAULT 0 NOT NULL,
+	`tax_amount` real DEFAULT 0 NOT NULL,
+	`discount_amount` real DEFAULT 0 NOT NULL,
+	`total` real DEFAULT 0 NOT NULL,
+	`amount_paid` real DEFAULT 0 NOT NULL,
+	`currency` text DEFAULT 'PKR' NOT NULL,
+	`notes` text,
+	`terms` text,
+	`created_by` integer,
+	`created_at` text NOT NULL,
+	`updated_at` text NOT NULL,
+	FOREIGN KEY (`company_id`) REFERENCES `companies`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`client_id`) REFERENCES `clients`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`created_by`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+);
