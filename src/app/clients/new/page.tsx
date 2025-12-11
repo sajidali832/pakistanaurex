@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Save, Loader2, Building2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 function NewClientContent() {
   const { t } = useI18n();
@@ -49,23 +50,51 @@ function NewClientContent() {
 
     setSaving(true);
     try {
+      // Only send fields that the API accepts
+      const clientData = {
+        name: formData.name,
+        nameUrdu: formData.nameUrdu,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        ntnNumber: formData.ntnNumber,
+        contactPerson: formData.contactPerson,
+        // Note: balance, bank details, and salesTaxRegistration are not handled by the API
+      };
+
+      console.log('Creating client with data:', clientData);
+
       // Rely on Clerk session cookies for authentication; no manual bearer token.
       const res = await fetch('/api/clients', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        // The API derives companyId from the authenticated user; we only send form data.
-        body: JSON.stringify({
-          ...formData,
-        }),
+        // The API derives companyId from authenticated user; we only send form data.
+        body: JSON.stringify(clientData),
       });
 
-      if (!res.ok) throw new Error('Failed to create client');
+      if (res.status === 401) {
+        toast.error('Your session has expired. Please log in again.');
+        window.location.href = `/login?redirect_url=${encodeURIComponent('/clients/new')}`;
+        return;
+      }
 
+      if (!res.ok) {
+        const error = await res.json();
+        console.error('Client creation failed:', error);
+        toast.error(error.error || 'Failed to create client');
+        return;
+      }
+
+      const newClient = await res.json();
+      console.log('Client created successfully:', newClient);
+      toast.success('Client created successfully');
       router.push('/clients');
     } catch (error) {
       console.error('Save failed:', error);
+      toast.error('Failed to create client');
     } finally {
       setSaving(false);
     }

@@ -192,6 +192,9 @@ function NewTaxInvoiceContent() {
             return;
         }
 
+        // Convert 'issued' to 'sent' for API compatibility
+        const apiStatus = status === 'issued' ? 'sent' : status;
+
         setSaving(true);
         try {
             const invoiceData = {
@@ -199,7 +202,7 @@ function NewTaxInvoiceContent() {
                 clientId: parseInt(clientId),
                 invoiceNumber: serialNumber,
                 issueDate,
-                status,
+                status: apiStatus,
                 subtotal: totalExclTax,
                 taxAmount: totalTax,
                 discountAmount: 0,
@@ -225,10 +228,13 @@ function NewTaxInvoiceContent() {
             }
 
             if (res.ok) {
+                const savedInvoice = await res.json();
+                console.log('Tax invoice saved successfully:', savedInvoice);
                 toast.success('Sales Tax Invoice created successfully');
                 router.push('/tax-invoices');
             } else {
                 const error = await res.json();
+                console.error('Save failed:', error);
                 toast.error(error.error || 'Failed to create tax invoice');
             }
         } catch (error) {
