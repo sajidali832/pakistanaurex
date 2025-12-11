@@ -74,21 +74,49 @@ function InvoicesContent() {
     }
   }, [companyId]);
 
+  // Also fetch data when page becomes visible (after navigation)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && companyId) {
+        fetchData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [companyId]);
+
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('bearer_token');
-      const headers = { 'Authorization': `Bearer ${token}` };
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
       
       const [invoicesRes, clientsRes] = await Promise.all([
         fetch('/api/invoices?limit=100', { headers }),
-        fetch('/api/clients', { headers }),
+        fetch('/api/clients?limit=100', { headers }),
       ]);
-      const invoicesData = await invoicesRes.json();
-      const clientsData = await clientsRes.json();
-      setInvoices(Array.isArray(invoicesData) ? invoicesData : []);
-      setClients(Array.isArray(clientsData) ? clientsData : []);
+
+      if (!invoicesRes.ok) {
+        console.error('Failed to fetch invoices:', invoicesRes.status);
+        setInvoices([]);
+      } else {
+        const invoicesData = await invoicesRes.json();
+        console.log('Invoices data:', invoicesData);
+        setInvoices(Array.isArray(invoicesData) ? invoicesData : []);
+      }
+
+      if (!clientsRes.ok) {
+        console.error('Failed to fetch clients:', clientsRes.status);
+        setClients([]);
+      } else {
+        const clientsData = await clientsRes.json();
+        console.log('Clients data:', clientsData);
+        setClients(Array.isArray(clientsData) ? clientsData : []);
+      }
     } catch (error) {
       console.error('Failed to fetch:', error);
+      setInvoices([]);
+      setClients([]);
     } finally {
       setLoading(false);
     }

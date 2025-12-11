@@ -77,32 +77,60 @@ function TaxInvoicesContent() {
         }
     }, [companyId]);
 
+    // Also fetch data when page becomes visible (after navigation)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (!document.hidden && companyId) {
+                fetchData();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [companyId]);
+
     const fetchData = async () => {
         try {
             setLoading(true);
 
             // Fetch tax invoices from API
-            const invoicesRes = await fetch('/api/tax-invoices');
+            const invoicesRes = await fetch('/api/tax-invoices?limit=100');
             if (invoicesRes.status === 401) {
                 toast.error('Your session has expired. Please log in again.');
                 window.location.href = `/login?redirect_url=${encodeURIComponent('/tax-invoices')}`;
                 return;
             }
-            const invoicesData = await invoicesRes.json();
-
-            const clientsRes = await fetch('/api/clients');
+            
+            const clientsRes = await fetch('/api/clients?limit=100');
             if (clientsRes.status === 401) {
                 toast.error('Your session has expired. Please log in again.');
                 window.location.href = `/login?redirect_url=${encodeURIComponent('/tax-invoices')}`;
                 return;
             }
-            const clientsData = await clientsRes.json();
 
-            setTaxInvoices(invoicesData);
-            setClients(clientsData);
+            if (!invoicesRes.ok) {
+                console.error('Failed to fetch tax invoices:', invoicesRes.status);
+                setTaxInvoices([]);
+            } else {
+                const invoicesData = await invoicesRes.json();
+                console.log('Tax invoices data:', invoicesData);
+                // Ensure we always set an array
+                setTaxInvoices(Array.isArray(invoicesData) ? invoicesData : []);
+            }
+
+            if (!clientsRes.ok) {
+                console.error('Failed to fetch clients:', clientsRes.status);
+                setClients([]);
+            } else {
+                const clientsData = await clientsRes.json();
+                console.log('Clients data:', clientsData);
+                setClients(Array.isArray(clientsData) ? clientsData : []);
+            }
         } catch (error) {
             console.error('Failed to fetch data:', error);
             toast.error('Failed to load data');
+            setTaxInvoices([]);
+            setClients([]);
         } finally {
             setLoading(false);
         }

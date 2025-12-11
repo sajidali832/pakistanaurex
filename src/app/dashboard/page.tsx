@@ -26,6 +26,7 @@ import {
   ArrowRight,
   TrendingUp,
   TrendingDown,
+  Sparkles,
 } from 'lucide-react';
 
 interface Invoice {
@@ -141,22 +142,26 @@ function DashboardContent() {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const StatCard = ({ title, value, icon: Icon, trend, trendValue }: {
+  const StatCard = ({ title, value, icon: Icon, trend, trendValue, gradient }: {
     title: string;
     value: string;
     icon: any;
     trend?: 'up' | 'down';
     trendValue?: string;
+    gradient: string;
   }) => (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+    <Card className="relative overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
+      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-90`} />
+      <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-semibold text-white/90">{title}</CardTitle>
+        <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+          <Icon className="h-5 w-5 text-white drop-shadow-lg" />
+        </div>
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+      <CardContent className="relative">
+        <div className="text-3xl font-bold text-white drop-shadow-lg">{value}</div>
         {trend && trendValue && (
-          <p className={`text-xs flex items-center gap-1 ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+          <p className={`text-xs flex items-center gap-1 mt-2 text-white/80 font-medium`}>
             {trend === 'up' ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
             {trendValue}
           </p>
@@ -198,63 +203,70 @@ function DashboardContent() {
 
   return (
     <div className="space-y-6">
-      {/* Quick Actions */}
+      {/* Quick Actions with gradient */}
       <div className="flex flex-wrap gap-3">
         <Link href="/invoices/new">
-          <Button>
+          <Button className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700 shadow-lg hover:shadow-xl transition-all border-0">
             <Plus className="h-4 w-4 mr-2" />
             {t('createInvoice')}
           </Button>
         </Link>
         <Link href="/quotations/new">
-          <Button variant="outline">
+          <Button className="bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-700 hover:via-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all border-0">
             <Plus className="h-4 w-4 mr-2" />
             {t('createQuotation')}
           </Button>
         </Link>
         <Link href="/clients/new">
-          <Button variant="outline">
+          <Button className="bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 hover:from-emerald-700 hover:via-teal-700 hover:to-green-700 shadow-lg hover:shadow-xl transition-all border-0">
             <Plus className="h-4 w-4 mr-2" />
             {t('addClient')}
           </Button>
         </Link>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Grid with colorful gradients */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title={t('totalRevenue')}
           value={formatCurrency(stats?.totalRevenue || 0, language)}
           icon={DollarSign}
+          gradient="from-emerald-500 via-teal-500 to-green-500"
         />
         <StatCard
           title={t('unpaidInvoices')}
           value={formatCurrency(stats?.unpaidAmount || 0, language)}
           icon={FileText}
+          gradient="from-orange-500 via-amber-500 to-yellow-500"
         />
         <StatCard
           title={t('totalClients')}
           value={stats?.totalClients.toString() || '0'}
           icon={Users}
+          gradient="from-violet-500 via-purple-500 to-fuchsia-500"
         />
         <StatCard
           title={t('pendingQuotations')}
           value={stats?.pendingQuotations.toString() || '0'}
           icon={FileSpreadsheet}
+          gradient="from-cyan-500 via-blue-500 to-indigo-500"
         />
       </div>
 
-      {/* Recent Activity */}
+      {/* Recent Activity with enhanced cards */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Recent Invoices */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+        <Card className="border-2 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30">
             <div>
-              <CardTitle>{t('recentInvoices')}</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-violet-600" />
+                {t('recentInvoices')}
+              </CardTitle>
               <CardDescription>Latest invoices overview</CardDescription>
             </div>
             <Link href="/invoices">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="text-violet-600 hover:text-violet-700 hover:bg-violet-100">
                 {t('view')} <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </Link>
@@ -292,14 +304,17 @@ function DashboardContent() {
         </Card>
 
         {/* Recent Quotations */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+        <Card className="border-2 shadow-xl hover:shadow-2xl transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-950/30 dark:to-blue-950/30">
             <div>
-              <CardTitle>{t('recentQuotations')}</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-cyan-600" />
+                {t('recentQuotations')}
+              </CardTitle>
               <CardDescription>Latest quotations overview</CardDescription>
             </div>
             <Link href="/quotations">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="text-cyan-600 hover:text-cyan-700 hover:bg-cyan-100">
                 {t('view')} <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </Link>

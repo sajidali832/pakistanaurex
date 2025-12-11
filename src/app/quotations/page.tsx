@@ -78,23 +78,49 @@ function QuotationsContent() {
     }
   }, [companyId]);
 
+  // Also fetch data when page becomes visible (after navigation)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && companyId) {
+        fetchData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [companyId]);
+
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('bearer_token');
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      
       const [quotationsRes, clientsRes] = await Promise.all([
-        fetch('/api/quotations?limit=100', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        }),
-        fetch('/api/clients', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        }),
+        fetch('/api/quotations?limit=100', { headers }),
+        fetch('/api/clients?limit=100', { headers }),
       ]);
-      const quotationsData = await quotationsRes.json();
-      const clientsData = await clientsRes.json();
-      setQuotations(Array.isArray(quotationsData) ? quotationsData : []);
-      setClients(Array.isArray(clientsData) ? clientsData : []);
+
+      if (!quotationsRes.ok) {
+        console.error('Failed to fetch quotations:', quotationsRes.status);
+        setQuotations([]);
+      } else {
+        const quotationsData = await quotationsRes.json();
+        console.log('Quotations data:', quotationsData);
+        setQuotations(Array.isArray(quotationsData) ? quotationsData : []);
+      }
+
+      if (!clientsRes.ok) {
+        console.error('Failed to fetch clients:', clientsRes.status);
+        setClients([]);
+      } else {
+        const clientsData = await clientsRes.json();
+        console.log('Clients data:', clientsData);
+        setClients(Array.isArray(clientsData) ? clientsData : []);
+      }
     } catch (error) {
       console.error('Failed to fetch:', error);
+      setQuotations([]);
+      setClients([]);
     } finally {
       setLoading(false);
     }
