@@ -1,0 +1,7 @@
+{
+  "projectId": "8a6f2340-9667-46d8-86ad-224bd381c1e7",
+  "createdAt": 1765444425370,
+  "startupCommands": [
+    "npm install; npx next dev --turbopack"
+  ]
+}

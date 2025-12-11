@@ -95,22 +95,26 @@ function NewTaxInvoiceContent() {
 
     const fetchData = async () => {
         try {
-            const token = localStorage.getItem('bearer_token');
-            const [clientsRes, companiesRes] = await Promise.all([
-                fetch('/api/clients', {
-                    headers: { 'Authorization': `Bearer ${token}` },
-                }),
-                fetch('/api/companies', {
-                    headers: { 'Authorization': `Bearer ${token}` },
-                }),
+            const [clientsRes, companyRes] = await Promise.all([
+                fetch('/api/clients?limit=100'),
+                fetch('/api/user-company'),
             ]);
-            const clientsData = await clientsRes.json();
-            const companiesData = await companiesRes.json();
 
-            setClients(Array.isArray(clientsData) ? clientsData : []);
+            if (!clientsRes.ok) {
+                const text = await clientsRes.text();
+                console.error('Failed to fetch clients for tax invoices:', clientsRes.status, text);
+                setClients([]);
+            } else {
+                const clientsData = await clientsRes.json();
+                setClients(Array.isArray(clientsData) ? clientsData : []);
+            }
 
-            if (Array.isArray(companiesData) && companiesData.length > 0) {
-                const company = companiesData[0];
+            if (!companyRes.ok) {
+                const text = await companyRes.text();
+                console.error('Failed to fetch company for tax invoices:', companyRes.status, text);
+                setCompanySettings(null);
+            } else {
+                const company = await companyRes.json();
                 setCompanySettings(company);
 
                 // Check if company settings are complete
@@ -123,10 +127,6 @@ function NewTaxInvoiceContent() {
                 const defaultTaxRate = company.defaultTaxRate ?? 17;
                 setLineItems([
                     { id: '1', serialNo: 1, description: '', quantity: 1, rate: 0, valueExclTax: 0, taxRate: defaultTaxRate, taxPayable: 0, valueInclTax: 0 }
-                ]);
-            } else {
-                setLineItems([
-                    { id: '1', serialNo: 1, description: '', quantity: 1, rate: 0, valueExclTax: 0, taxRate: 17, taxPayable: 0, valueInclTax: 0 }
                 ]);
             }
         } catch (error) {

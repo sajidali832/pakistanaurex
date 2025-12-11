@@ -90,23 +90,26 @@ function NewQuotationContent() {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('bearer_token');
-      const [clientsRes, companiesRes] = await Promise.all([
-        fetch('/api/clients', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        }),
-        fetch('/api/companies', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        }),
+      const [clientsRes, companyRes] = await Promise.all([
+        fetch('/api/clients?limit=100'),
+        fetch('/api/user-company'),
       ]);
-      const clientsData = await clientsRes.json();
-      const companiesData = await companiesRes.json();
 
-      setClients(Array.isArray(clientsData) ? clientsData : []);
+      if (!clientsRes.ok) {
+        const text = await clientsRes.text();
+        console.error('Failed to fetch clients for quotations:', clientsRes.status, text);
+        setClients([]);
+      } else {
+        const clientsData = await clientsRes.json();
+        setClients(Array.isArray(clientsData) ? clientsData : []);
+      }
 
-      // Get company settings for defaults
-      if (Array.isArray(companiesData) && companiesData.length > 0) {
-        const company = companiesData[0];
+      if (!companyRes.ok) {
+        const text = await companyRes.text();
+        console.error('Failed to fetch company for quotations:', companyRes.status, text);
+        setCompanySettings(null);
+      } else {
+        const company = await companyRes.json();
         setCompanySettings(company);
 
         // Set default tax rate from company settings
@@ -131,15 +134,6 @@ function NewQuotationContent() {
         // Initialize line items with company's default tax rate
         setLineItems([
           { id: '1', description: '', quantity: 1, unitPrice: 0, taxRate: defaultTaxRate, taxAmount: 0, lineTotal: 0 }
-        ]);
-      } else {
-        // Fallback defaults
-        const validUntilDate = new Date();
-        validUntilDate.setDate(validUntilDate.getDate() + 15);
-        setValidUntil(validUntilDate.toISOString().split('T')[0]);
-        setTerms('Valid for 15 days. Payment due within 30 days of acceptance.');
-        setLineItems([
-          { id: '1', description: '', quantity: 1, unitPrice: 0, taxRate: 17, taxAmount: 0, lineTotal: 0 }
         ]);
       }
     } catch (error) {
@@ -200,12 +194,10 @@ function NewQuotationContent() {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem('bearer_token');
       const quotationRes = await fetch('/api/quotations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           companyId,
@@ -234,7 +226,6 @@ function NewQuotationContent() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             quotationId: quotation.id,

@@ -74,7 +74,7 @@ export const FloatingNav = ({
                 ))}
 
                 <Link href="/login">
-                    <button className="border text-sm font-medium relative border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-200 bg-white/50 dark:bg-white/10 px-4 py-2 rounded-full hover:bg-neutral-100 dark:hover:bg-white/20 transition-colors backdrop-blur-sm">
+                    <button className="border-2 border-primary text-sm font-medium relative text-neutral-700 dark:text-neutral-200 bg-white/50 dark:bg-white/10 px-4 py-2 rounded-full hover:bg-neutral-100 dark:hover:bg-white/20 transition-colors backdrop-blur-sm">
                         <span>Login</span>
                         <span className="absolute inset-x-0 w-1/2 mx-auto -bottom-px bg-gradient-to-r from-transparent via-primary to-transparent h-px" />
                     </button>

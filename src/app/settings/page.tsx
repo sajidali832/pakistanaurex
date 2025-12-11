@@ -203,6 +203,10 @@ function SettingsContent() {
             <Globe className="h-4 w-4" />
             Language
           </TabsTrigger>
+          <TabsTrigger value="security" className="gap-2">
+            <AlertCircle className="h-4 w-4" />
+            Security
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="company" className="space-y-6">
@@ -358,6 +362,72 @@ function SettingsContent() {
                   {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   <Save className="h-4 w-4 mr-2" />
                   {hasCompany ? t('save') : 'Create Company'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="security" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Security & Legal</CardTitle>
+              <CardDescription>
+                Review how your data is protected and find support if you need help.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button
+                  variant="outline"
+                  className="justify-start h-auto py-3 flex-col items-start gap-1"
+                  asChild
+                >
+                  <a href="/privacy">
+                    <span className="font-medium text-foreground">Privacy Policy</span>
+                    <span className="text-xs text-muted-foreground">
+                      Learn how AUREX stores and protects your business data.
+                    </span>
+                  </a>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="justify-start h-auto py-3 flex-col items-start gap-1"
+                  asChild
+                >
+                  <a href="/terms">
+                    <span className="font-medium text-foreground">Terms &amp; Conditions</span>
+                    <span className="text-xs text-muted-foreground">
+                      Read the conditions for using the AUREX platform.
+                    </span>
+                  </a>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="justify-start h-auto py-3 flex-col items-start gap-1"
+                  asChild
+                >
+                  <a href="/support">
+                    <span className="font-medium text-foreground">Support</span>
+                    <span className="text-xs text-muted-foreground">
+                      Get help from our support team at hello@aurex.sbs.
+                    </span>
+                  </a>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="justify-start h-auto py-3 flex-col items-start gap-1"
+                  asChild
+                >
+                  <a href="/contact">
+                    <span className="font-medium text-foreground">Contact</span>
+                    <span className="text-xs text-muted-foreground">
+                      Reach out for general questions, feedback, or partnerships.
+                    </span>
+                  </a>
                 </Button>
               </div>
             </CardContent>

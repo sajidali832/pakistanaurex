@@ -90,23 +90,26 @@ function NewInvoiceContent() {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('bearer_token');
-      const [clientsRes, companiesRes] = await Promise.all([
-        fetch('/api/clients', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        }),
-        fetch('/api/companies', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        }),
+      const [clientsRes, companyRes] = await Promise.all([
+        fetch('/api/clients?limit=100'),
+        fetch('/api/user-company'),
       ]);
-      const clientsData = await clientsRes.json();
-      const companiesData = await companiesRes.json();
 
-      setClients(Array.isArray(clientsData) ? clientsData : []);
+      if (!clientsRes.ok) {
+        const text = await clientsRes.text();
+        console.error('Failed to fetch clients for invoices:', clientsRes.status, text);
+        setClients([]);
+      } else {
+        const clientsData = await clientsRes.json();
+        setClients(Array.isArray(clientsData) ? clientsData : []);
+      }
 
-      // Get company settings for defaults
-      if (Array.isArray(companiesData) && companiesData.length > 0) {
-        const company = companiesData[0];
+      if (!companyRes.ok) {
+        const text = await companyRes.text();
+        console.error('Failed to fetch company for invoices:', companyRes.status, text);
+        setCompanySettings(null);
+      } else {
+        const company = await companyRes.json();
         setCompanySettings(company);
 
         // Set default tax rate and payment terms from company settings
@@ -131,15 +134,6 @@ function NewInvoiceContent() {
         // Initialize line items with company's default tax rate
         setLineItems([
           { id: '1', description: '', quantity: 1, unitPrice: 0, taxRate: defaultTaxRate, taxAmount: 0, lineTotal: 0 }
-        ]);
-      } else {
-        // Fallback defaults
-        const dueDateObj = new Date();
-        dueDateObj.setDate(dueDateObj.getDate() + 30);
-        setDueDate(dueDateObj.toISOString().split('T')[0]);
-        setTerms('Payment due within 30 days');
-        setLineItems([
-          { id: '1', description: '', quantity: 1, unitPrice: 0, taxRate: 17, taxAmount: 0, lineTotal: 0 }
         ]);
       }
     } catch (error) {
@@ -200,13 +194,11 @@ function NewInvoiceContent() {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem('bearer_token');
       // Create invoice
       const invoiceRes = await fetch('/api/invoices', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           companyId,
@@ -236,7 +228,6 @@ function NewInvoiceContent() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             invoiceId: invoice.id,
