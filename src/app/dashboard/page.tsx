@@ -24,9 +24,6 @@ import {
   FileSpreadsheet,
   Plus,
   ArrowRight,
-  TrendingUp,
-  TrendingDown,
-  Sparkles,
 } from 'lucide-react';
 
 interface Invoice {
@@ -70,8 +67,6 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Always try to load dashboard data once.
-    // If companyId is available, APIs will be filtered; otherwise we load global data.
     fetchDashboardData();
   }, [companyId]);
 
@@ -80,12 +75,10 @@ function DashboardContent() {
       const token = localStorage.getItem('bearer_token');
       const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-      const companyQuery = companyId ? `&companyId=${companyId}` : '';
-
       const [invoicesRes, quotationsRes, clientsRes] = await Promise.all([
-        fetch(`/api/invoices?limit=5${companyQuery}`, { headers }),
-        fetch(`/api/quotations?limit=5${companyQuery}`, { headers }),
-        fetch(`/api/clients${companyId ? `?companyId=${companyId}` : ''}`, { headers }),
+        fetch(`/api/invoices?limit=5`, { headers }),
+        fetch(`/api/quotations?limit=5`, { headers }),
+        fetch(`/api/clients`, { headers }),
       ]);
 
       const invoices = await invoicesRes.json();
@@ -96,7 +89,6 @@ function DashboardContent() {
       setRecentQuotations(Array.isArray(quotations) ? quotations : []);
       setClients(Array.isArray(clientsData) ? clientsData : []);
 
-      // Calculate stats
       const allInvoices = Array.isArray(invoices) ? invoices : [];
       const totalRevenue = allInvoices
         .filter((inv: Invoice) => inv.status === 'paid')
@@ -139,60 +131,20 @@ function DashboardContent() {
     };
 
     const config = statusConfig[status] || { variant: 'secondary' as const, label: status };
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+    return <Badge variant={config.variant} className="text-xs">{config.label}</Badge>;
   };
-
-  const StatCard = ({ title, value, icon: Icon, trend, trendValue, gradient }: {
-    title: string;
-    value: string;
-    icon: any;
-    trend?: 'up' | 'down';
-    trendValue?: string;
-    gradient: string;
-  }) => (
-    <Card className="relative overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
-      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-90`} />
-      <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-semibold text-white/90">{title}</CardTitle>
-        <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-          <Icon className="h-5 w-5 text-white drop-shadow-lg" />
-        </div>
-      </CardHeader>
-      <CardContent className="relative">
-        <div className="text-3xl font-bold text-white drop-shadow-lg">{value}</div>
-        {trend && trendValue && (
-          <p className={`text-xs flex items-center gap-1 mt-2 text-white/80 font-medium`}>
-            {trend === 'up' ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-            {trendValue}
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  );
 
   if (loading || companyLoading) {
     return (
-      <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="space-y-4">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="pb-2">
-                <Skeleton className="h-4 w-24" />
+            <Card key={i} className="border">
+              <CardHeader className="pb-2 p-4">
+                <Skeleton className="h-3 w-20" />
               </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-32" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        <div className="grid gap-6 md:grid-cols-2">
-          {[...Array(2)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-6 w-40" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-48 w-full" />
+              <CardContent className="p-4 pt-0">
+                <Skeleton className="h-6 w-24" />
               </CardContent>
             </Card>
           ))}
@@ -202,99 +154,103 @@ function DashboardContent() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Quick Actions with gradient */}
-      <div className="flex flex-wrap gap-3">
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
         <Link href="/invoices/new">
-          <Button className="bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700 shadow-lg hover:shadow-xl transition-all border-0">
-            <Plus className="h-4 w-4 mr-2" />
+          <Button size="sm" className="h-8 text-xs">
+            <Plus className="h-3 w-3 mr-1" />
             {t('createInvoice')}
           </Button>
         </Link>
         <Link href="/quotations/new">
-          <Button className="bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 hover:from-cyan-700 hover:via-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all border-0">
-            <Plus className="h-4 w-4 mr-2" />
+          <Button size="sm" variant="outline" className="h-8 text-xs">
+            <Plus className="h-3 w-3 mr-1" />
             {t('createQuotation')}
           </Button>
         </Link>
         <Link href="/clients/new">
-          <Button className="bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 hover:from-emerald-700 hover:via-teal-700 hover:to-green-700 shadow-lg hover:shadow-xl transition-all border-0">
-            <Plus className="h-4 w-4 mr-2" />
+          <Button size="sm" variant="outline" className="h-8 text-xs">
+            <Plus className="h-3 w-3 mr-1" />
             {t('addClient')}
           </Button>
         </Link>
       </div>
 
-      {/* Stats Grid with colorful gradients */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title={t('totalRevenue')}
-          value={formatCurrency(stats?.totalRevenue || 0, language)}
-          icon={DollarSign}
-          gradient="from-emerald-500 via-teal-500 to-green-500"
-        />
-        <StatCard
-          title={t('unpaidInvoices')}
-          value={formatCurrency(stats?.unpaidAmount || 0, language)}
-          icon={FileText}
-          gradient="from-orange-500 via-amber-500 to-yellow-500"
-        />
-        <StatCard
-          title={t('totalClients')}
-          value={stats?.totalClients.toString() || '0'}
-          icon={Users}
-          gradient="from-violet-500 via-purple-500 to-fuchsia-500"
-        />
-        <StatCard
-          title={t('pendingQuotations')}
-          value={stats?.pendingQuotations.toString() || '0'}
-          icon={FileSpreadsheet}
-          gradient="from-cyan-500 via-blue-500 to-indigo-500"
-        />
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="border">
+          <CardHeader className="flex flex-row items-center justify-between pb-1 p-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground">{t('totalRevenue')}</CardTitle>
+            <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="text-xl font-semibold">{formatCurrency(stats?.totalRevenue || 0, language)}</div>
+          </CardContent>
+        </Card>
+        <Card className="border">
+          <CardHeader className="flex flex-row items-center justify-between pb-1 p-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground">{t('unpaidInvoices')}</CardTitle>
+            <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="text-xl font-semibold">{formatCurrency(stats?.unpaidAmount || 0, language)}</div>
+          </CardContent>
+        </Card>
+        <Card className="border">
+          <CardHeader className="flex flex-row items-center justify-between pb-1 p-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground">{t('totalClients')}</CardTitle>
+            <Users className="h-3.5 w-3.5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="text-xl font-semibold">{stats?.totalClients || 0}</div>
+          </CardContent>
+        </Card>
+        <Card className="border">
+          <CardHeader className="flex flex-row items-center justify-between pb-1 p-4">
+            <CardTitle className="text-xs font-medium text-muted-foreground">{t('pendingQuotations')}</CardTitle>
+            <FileSpreadsheet className="h-3.5 w-3.5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="p-4 pt-0">
+            <div className="text-xl font-semibold">{stats?.pendingQuotations || 0}</div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Recent Activity with enhanced cards */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Recent Invoices */}
-        <Card className="border-2 shadow-xl hover:shadow-2xl transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30">
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="border">
+          <CardHeader className="flex flex-row items-center justify-between p-4 pb-2">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-violet-600" />
-                {t('recentInvoices')}
-              </CardTitle>
-              <CardDescription>Latest invoices overview</CardDescription>
+              <CardTitle className="text-sm font-medium">{t('recentInvoices')}</CardTitle>
             </div>
             <Link href="/invoices">
-              <Button variant="ghost" size="sm" className="text-violet-600 hover:text-violet-700 hover:bg-violet-100">
-                {t('view')} <ArrowRight className="h-4 w-4 ml-1" />
+              <Button variant="ghost" size="sm" className="h-7 text-xs">
+                {t('view')} <ArrowRight className="h-3 w-3 ml-1" />
               </Button>
             </Link>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-0">
             {recentInvoices.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">{t('noData')}</p>
+              <p className="text-muted-foreground text-center py-6 text-sm">{t('noData')}</p>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('invoiceNumber')}</TableHead>
-                    <TableHead>{t('client')}</TableHead>
-                    <TableHead>{t('total')}</TableHead>
-                    <TableHead>{t('status')}</TableHead>
+                    <TableHead className="text-xs h-8">{t('invoiceNumber')}</TableHead>
+                    <TableHead className="text-xs h-8">{t('client')}</TableHead>
+                    <TableHead className="text-xs h-8">{t('total')}</TableHead>
+                    <TableHead className="text-xs h-8">{t('status')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {recentInvoices.map((invoice) => (
                     <TableRow key={invoice.id}>
-                      <TableCell className="font-medium">
-                        <Link href={`/invoices/${invoice.id}`} className="hover:underline">
+                      <TableCell className="py-2 text-xs">
+                        <Link href={`/invoices/${invoice.id}`} className="hover:underline font-medium">
                           {invoice.invoiceNumber}
                         </Link>
                       </TableCell>
-                      <TableCell>{getClientName(invoice.clientId)}</TableCell>
-                      <TableCell>{formatCurrency(invoice.total, language)}</TableCell>
-                      <TableCell>{getStatusBadge(invoice.status)}</TableCell>
+                      <TableCell className="py-2 text-xs">{getClientName(invoice.clientId)}</TableCell>
+                      <TableCell className="py-2 text-xs">{formatCurrency(invoice.total, language)}</TableCell>
+                      <TableCell className="py-2">{getStatusBadge(invoice.status)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -303,46 +259,41 @@ function DashboardContent() {
           </CardContent>
         </Card>
 
-        {/* Recent Quotations */}
-        <Card className="border-2 shadow-xl hover:shadow-2xl transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-950/30 dark:to-blue-950/30">
+        <Card className="border">
+          <CardHeader className="flex flex-row items-center justify-between p-4 pb-2">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-cyan-600" />
-                {t('recentQuotations')}
-              </CardTitle>
-              <CardDescription>Latest quotations overview</CardDescription>
+              <CardTitle className="text-sm font-medium">{t('recentQuotations')}</CardTitle>
             </div>
             <Link href="/quotations">
-              <Button variant="ghost" size="sm" className="text-cyan-600 hover:text-cyan-700 hover:bg-cyan-100">
-                {t('view')} <ArrowRight className="h-4 w-4 ml-1" />
+              <Button variant="ghost" size="sm" className="h-7 text-xs">
+                {t('view')} <ArrowRight className="h-3 w-3 ml-1" />
               </Button>
             </Link>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-0">
             {recentQuotations.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">{t('noData')}</p>
+              <p className="text-muted-foreground text-center py-6 text-sm">{t('noData')}</p>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('quotationNumber')}</TableHead>
-                    <TableHead>{t('client')}</TableHead>
-                    <TableHead>{t('total')}</TableHead>
-                    <TableHead>{t('status')}</TableHead>
+                    <TableHead className="text-xs h-8">{t('quotationNumber')}</TableHead>
+                    <TableHead className="text-xs h-8">{t('client')}</TableHead>
+                    <TableHead className="text-xs h-8">{t('total')}</TableHead>
+                    <TableHead className="text-xs h-8">{t('status')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {recentQuotations.map((quotation) => (
                     <TableRow key={quotation.id}>
-                      <TableCell className="font-medium">
-                        <Link href={`/quotations/${quotation.id}`} className="hover:underline">
+                      <TableCell className="py-2 text-xs">
+                        <Link href={`/quotations/${quotation.id}`} className="hover:underline font-medium">
                           {quotation.quotationNumber}
                         </Link>
                       </TableCell>
-                      <TableCell>{getClientName(quotation.clientId)}</TableCell>
-                      <TableCell>{formatCurrency(quotation.total, language)}</TableCell>
-                      <TableCell>{getStatusBadge(quotation.status)}</TableCell>
+                      <TableCell className="py-2 text-xs">{getClientName(quotation.clientId)}</TableCell>
+                      <TableCell className="py-2 text-xs">{formatCurrency(quotation.total, language)}</TableCell>
+                      <TableCell className="py-2">{getStatusBadge(quotation.status)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

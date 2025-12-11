@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
-import { Globe, Loader2, Mail, ArrowLeft, CheckCircle2, Sparkles } from 'lucide-react';
+import { Globe, Loader2, Mail, ArrowLeft } from 'lucide-react';
 
 function RegisterForm() {
   const { t, language, setLanguage, isRTL } = useI18n();
@@ -27,8 +27,6 @@ function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  // Verification state
   const [pendingVerification, setPendingVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
   const [verifying, setVerifying] = useState(false);
@@ -65,11 +63,9 @@ function RegisterForm() {
         lastName: name.split(' ').slice(1).join(' ') || undefined,
       });
 
-      // Send email verification code
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
       setPendingVerification(true);
     } catch (err: any) {
-      console.error('Sign up error:', err);
       const errorMessage = err?.errors?.[0]?.message || 'Registration failed. Please try again.';
       setError(errorMessage);
     } finally {
@@ -84,9 +80,7 @@ function RegisterForm() {
     setError('');
 
     try {
-      const completeSignUp = await signUp.attemptEmailAddressVerification({
-        code,
-      });
+      const completeSignUp = await signUp.attemptEmailAddressVerification({ code });
 
       if (completeSignUp.status === 'complete') {
         await setActive({ session: completeSignUp.createdSessionId });
@@ -95,7 +89,6 @@ function RegisterForm() {
         setError('Verification incomplete. Please try again.');
       }
     } catch (err: any) {
-      console.error('Verification error:', err);
       const errorMessage = err?.errors?.[0]?.message || 'Invalid verification code.';
       setError(errorMessage);
     } finally {
@@ -105,7 +98,6 @@ function RegisterForm() {
 
   const handleResendCode = async () => {
     if (!isLoaded) return;
-
     setError('');
     try {
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
@@ -118,17 +110,10 @@ function RegisterForm() {
     setLanguage(language === 'en' ? 'ur' : 'en');
   };
 
-  // Verification Code UI
   if (pendingVerification) {
     return (
-      <div className={`min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-muted/50 p-4 ${isRTL ? 'rtl' : 'ltr'}`}>
-        {/* Decorative elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        </div>
-
-        <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+      <div className={`min-h-screen flex flex-col items-center justify-center bg-background p-4 ${isRTL ? 'rtl' : 'ltr'}`}>
+        <div className="absolute top-4 right-4 flex items-center gap-2">
           <ThemeToggle />
           <Button variant="ghost" size="sm" onClick={toggleLanguage}>
             <Globe className="h-4 w-4 mr-2" />
@@ -136,34 +121,31 @@ function RegisterForm() {
           </Button>
         </div>
 
-        <div className="w-full max-w-md space-y-6 relative z-10">
-          <div className="flex flex-col items-center space-y-3">
-            <AurexLogo size="xl" variant="full" />
+        <div className="w-full max-w-sm space-y-6">
+          <div className="flex flex-col items-center space-y-2">
+            <AurexLogo size="md" variant="full" />
           </div>
 
-          <Card className="border-0 shadow-2xl bg-card/80 backdrop-blur-xl">
+          <Card className="border">
             <CardHeader className="text-center pb-2">
-              <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                <Mail className="h-8 w-8 text-primary" />
+              <div className="mx-auto w-12 h-12 bg-muted rounded-full flex items-center justify-center mb-3">
+                <Mail className="h-6 w-6 text-muted-foreground" />
               </div>
-              <CardTitle className="text-2xl">Check Your Email</CardTitle>
-              <CardDescription className="text-base">
-                We've sent a verification code to
+              <CardTitle className="text-lg">Check Your Email</CardTitle>
+              <CardDescription className="text-sm">
+                Enter the 6-digit code sent to
                 <br />
                 <span className="font-medium text-foreground">{email}</span>
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
               {error && (
                 <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription className="text-sm">{error}</AlertDescription>
                 </Alert>
               )}
 
-              <div className="flex flex-col items-center space-y-4">
-                <Label className="text-sm text-muted-foreground">
-                  Enter the 6-digit code
-                </Label>
+              <div className="flex flex-col items-center space-y-3">
                 <InputOTP
                   maxLength={6}
                   value={verificationCode}
@@ -174,36 +156,27 @@ function RegisterForm() {
                     }
                   }}
                   disabled={verifying}
-                  className="gap-2"
                 >
                   <InputOTPGroup>
-                    <InputOTPSlot index={0} className="w-12 h-14 text-xl font-semibold border-2 rounded-lg" />
-                    <InputOTPSlot index={1} className="w-12 h-14 text-xl font-semibold border-2 rounded-lg" />
-                    <InputOTPSlot index={2} className="w-12 h-14 text-xl font-semibold border-2 rounded-lg" />
-                    <InputOTPSlot index={3} className="w-12 h-14 text-xl font-semibold border-2 rounded-lg" />
-                    <InputOTPSlot index={4} className="w-12 h-14 text-xl font-semibold border-2 rounded-lg" />
-                    <InputOTPSlot index={5} className="w-12 h-14 text-xl font-semibold border-2 rounded-lg" />
+                    <InputOTPSlot index={0} className="w-10 h-10 text-lg rounded-full border-2" />
+                    <InputOTPSlot index={1} className="w-10 h-10 text-lg rounded-full border-2" />
+                    <InputOTPSlot index={2} className="w-10 h-10 text-lg rounded-full border-2" />
+                    <InputOTPSlot index={3} className="w-10 h-10 text-lg rounded-full border-2" />
+                    <InputOTPSlot index={4} className="w-10 h-10 text-lg rounded-full border-2" />
+                    <InputOTPSlot index={5} className="w-10 h-10 text-lg rounded-full border-2" />
                   </InputOTPGroup>
                 </InputOTP>
 
                 {verifying && (
-                  <div className="flex items-center gap-2 text-primary">
+                  <div className="flex items-center gap-2 text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span className="text-sm">Verifying...</span>
                   </div>
                 )}
               </div>
 
-              <div className="text-center space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  Didn't receive the code?
-                </p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleResendCode}
-                  className="text-primary hover:text-primary/80"
-                >
+              <div className="text-center">
+                <Button variant="ghost" size="sm" onClick={handleResendCode} className="text-sm">
                   Resend Code
                 </Button>
               </div>
@@ -213,7 +186,7 @@ function RegisterForm() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setPendingVerification(false)}
-                className="text-muted-foreground"
+                className="text-muted-foreground text-sm"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Sign Up
@@ -225,16 +198,9 @@ function RegisterForm() {
     );
   }
 
-  // Main Registration Form
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-background to-muted/50 p-4 ${isRTL ? 'rtl' : 'ltr'}`}>
-      {/* Decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-      </div>
-
-      <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+    <div className={`min-h-screen flex flex-col items-center justify-center bg-background p-4 ${isRTL ? 'rtl' : 'ltr'}`}>
+      <div className="absolute top-4 right-4 flex items-center gap-2">
         <ThemeToggle />
         <Button variant="ghost" size="sm" onClick={toggleLanguage}>
           <Globe className="h-4 w-4 mr-2" />
@@ -242,30 +208,27 @@ function RegisterForm() {
         </Button>
       </div>
 
-      <div className="w-full max-w-md space-y-6 relative z-10">
-        <div className="flex flex-col items-center space-y-3">
-          <AurexLogo size="xl" variant="full" />
-          <p className="text-muted-foreground text-center">{t('tagline')}</p>
+      <div className="w-full max-w-sm space-y-6">
+        <div className="flex flex-col items-center space-y-2">
+          <AurexLogo size="md" variant="full" />
+          <p className="text-muted-foreground text-sm text-center">{t('tagline')}</p>
         </div>
 
-        <Card className="border-0 shadow-2xl bg-card/80 backdrop-blur-xl">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-gradient-to-br from-primary to-primary/60 rounded-xl flex items-center justify-center mb-2 shadow-lg">
-              <Sparkles className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <CardTitle className="text-2xl">{t('register')}</CardTitle>
-            <CardDescription>Create your business account</CardDescription>
+        <Card className="border">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-lg">{t('register')}</CardTitle>
+            <CardDescription className="text-sm">Create your business account</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3">
               {error && (
                 <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription className="text-sm">{error}</AlertDescription>
                 </Alert>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="name">{t('name')}</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="name" className="text-sm">{t('name')}</Label>
                 <Input
                   id="name"
                   type="text"
@@ -274,12 +237,12 @@ function RegisterForm() {
                   onChange={(e) => setName(e.target.value)}
                   required
                   disabled={loading}
-                  className="h-11 bg-background/50"
+                  className="h-9"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">{t('email')}</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-sm">{t('email')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -288,12 +251,12 @@ function RegisterForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={loading}
-                  className="h-11 bg-background/50"
+                  className="h-9"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">{t('password')}</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="password" className="text-sm">{t('password')}</Label>
                 <Input
                   id="password"
                   type="password"
@@ -304,12 +267,12 @@ function RegisterForm() {
                   disabled={loading}
                   minLength={8}
                   autoComplete="new-password"
-                  className="h-11 bg-background/50"
+                  className="h-9"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">{t('confirmPassword')}</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="confirmPassword" className="text-sm">{t('confirmPassword')}</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
@@ -319,13 +282,13 @@ function RegisterForm() {
                   required
                   disabled={loading}
                   autoComplete="new-password"
-                  className="h-11 bg-background/50"
+                  className="h-9"
                 />
               </div>
 
               <Button
                 type="submit"
-                className="w-full h-11 text-base font-medium shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
+                className="w-full h-9 text-sm"
                 disabled={loading || !isLoaded}
               >
                 {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
@@ -333,10 +296,10 @@ function RegisterForm() {
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex justify-center">
+          <CardFooter className="flex justify-center pt-0">
             <p className="text-sm text-muted-foreground">
               {t('hasAccount')}{' '}
-              <Link href="/login" className="text-primary hover:underline font-medium">
+              <Link href="/login" className="text-primary hover:underline">
                 {t('login')}
               </Link>
             </p>

@@ -1,40 +1,40 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { FloatingNav } from '@/components/ui/floating-navbar';
-import { Home, BookOpen, LayoutDashboard, LogIn, UserPlus } from 'lucide-react';
+import React from 'react';
+import Link from 'next/link';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { AurexLogo } from '@/components/AurexLogo';
-import Link from 'next/link';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@clerk/nextjs';
 
 export function PublicHeader() {
-    const { isSignedIn, isLoaded } = useAuth();
-    const { user } = useUser();
+  const { isSignedIn, isLoaded } = useAuth();
 
-    const navItems = [];
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm border-b">
+      <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
+        <Link href="/">
+          <AurexLogo size="sm" variant="full" />
+        </Link>
 
-    if (isLoaded && isSignedIn) {
-        navItems.push({
-            name: "Dashboard",
-            link: "/dashboard",
-            icon: <LayoutDashboard className="h-4 w-4 text-neutral-500 dark:text-white" />,
-        });
-    }
-
-    return (
-        <div className="relative w-full">
-            <FloatingNav navItems={navItems} />
-
-            <div className="fixed top-5 left-5 z-[5001]">
-                <Link href="/">
-                    <AurexLogo size="md" variant="full" />
-                </Link>
-            </div>
-
-            <div className="fixed top-5 right-5 z-[5001]">
-                <ThemeToggle />
-            </div>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          {isLoaded && isSignedIn ? (
+            <Link href="/dashboard">
+              <Button size="sm" className="h-8 text-xs">Dashboard</Button>
+            </Link>
+          ) : (
+            <>
+              <Link href="/login">
+                <Button variant="ghost" size="sm" className="h-8 text-xs">Login</Button>
+              </Link>
+              <Link href="/register">
+                <Button size="sm" className="h-8 text-xs">Sign Up</Button>
+              </Link>
+            </>
+          )}
         </div>
-    );
+      </div>
+    </header>
+  );
 }

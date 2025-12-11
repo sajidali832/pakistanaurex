@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { I18nProvider, useI18n, formatCurrency, formatDate } from '@/lib/i18n';
 import { useCompany } from '@/hooks/useCompany';
 import AppLayout from '@/components/AppLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -69,54 +69,38 @@ function InvoicesContent() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (companyId) {
-      fetchData();
-    }
+    fetchData();
   }, [companyId]);
 
-  // Also fetch data when page becomes visible (after navigation)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden && companyId) {
+      if (!document.hidden) {
         fetchData();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [companyId]);
+  }, []);
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('bearer_token');
-      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      
       const [invoicesRes, clientsRes] = await Promise.all([
-        fetch('/api/invoices?limit=100', { headers }),
-        fetch('/api/clients?limit=100', { headers }),
+        fetch('/api/invoices?limit=100'),
+        fetch('/api/clients?limit=100'),
       ]);
 
-      if (!invoicesRes.ok) {
-        console.error('Failed to fetch invoices:', invoicesRes.status);
-        setInvoices([]);
-      } else {
+      if (invoicesRes.ok) {
         const invoicesData = await invoicesRes.json();
-        console.log('Invoices data:', invoicesData);
         setInvoices(Array.isArray(invoicesData) ? invoicesData : []);
       }
 
-      if (!clientsRes.ok) {
-        console.error('Failed to fetch clients:', clientsRes.status);
-        setClients([]);
-      } else {
+      if (clientsRes.ok) {
         const clientsData = await clientsRes.json();
-        console.log('Clients data:', clientsData);
         setClients(Array.isArray(clientsData) ? clientsData : []);
       }
     } catch (error) {
       console.error('Failed to fetch:', error);
-      setInvoices([]);
-      setClients([]);
     } finally {
       setLoading(false);
     }
@@ -125,11 +109,7 @@ function InvoicesContent() {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      const token = localStorage.getItem('bearer_token');
-      await fetch(`/api/invoices?id=${deleteId}`, { 
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      await fetch(`/api/invoices?id=${deleteId}`, { method: 'DELETE' });
       setInvoices(invoices.filter(i => i.id !== deleteId));
     } catch (error) {
       console.error('Delete failed:', error);
@@ -150,7 +130,7 @@ function InvoicesContent() {
       cancelled: { variant: 'secondary', label: t('cancelled') },
     };
     const config = statusConfig[status] || { variant: 'secondary' as const, label: status };
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+    return <Badge variant={config.variant} className="text-xs">{config.label}</Badge>;
   };
 
   const filteredInvoices = invoices.filter(invoice => {
@@ -163,14 +143,14 @@ function InvoicesContent() {
 
   if (loading || companyLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-8 w-24" />
         </div>
-        <Card>
-          <CardContent className="p-6">
-            <Skeleton className="h-64 w-full" />
+        <Card className="border">
+          <CardContent className="p-4">
+            <Skeleton className="h-48 w-full" />
           </CardContent>
         </Card>
       </div>
@@ -178,20 +158,20 @@ function InvoicesContent() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-3">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               placeholder={t('search')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 w-full sm:w-64"
+              className="pl-8 h-8 w-full sm:w-48 text-sm"
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-40">
+            <SelectTrigger className="w-full sm:w-32 h-8 text-sm">
               <SelectValue placeholder={t('filter')} />
             </SelectTrigger>
             <SelectContent>
@@ -205,68 +185,68 @@ function InvoicesContent() {
           </Select>
         </div>
         <Link href="/invoices/new">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
+          <Button size="sm" className="h-8 text-xs">
+            <Plus className="h-3 w-3 mr-1" />
             {t('createInvoice')}
           </Button>
         </Link>
       </div>
 
-      <Card>
+      <Card className="border">
         <CardContent className="p-0">
           {filteredInvoices.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
+            <div className="text-center py-10 text-muted-foreground text-sm">
               {t('noData')}
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t('invoiceNumber')}</TableHead>
-                  <TableHead>{t('client')}</TableHead>
-                  <TableHead>{t('issueDate')}</TableHead>
-                  <TableHead>{t('dueDate')}</TableHead>
-                  <TableHead>{t('total')}</TableHead>
-                  <TableHead>{t('status')}</TableHead>
-                  <TableHead className="w-12">{t('actions')}</TableHead>
+                  <TableHead className="text-xs">{t('invoiceNumber')}</TableHead>
+                  <TableHead className="text-xs">{t('client')}</TableHead>
+                  <TableHead className="text-xs">{t('issueDate')}</TableHead>
+                  <TableHead className="text-xs">{t('dueDate')}</TableHead>
+                  <TableHead className="text-xs">{t('total')}</TableHead>
+                  <TableHead className="text-xs">{t('status')}</TableHead>
+                  <TableHead className="w-10"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredInvoices.map((invoice) => (
                   <TableRow key={invoice.id}>
-                    <TableCell className="font-medium">
+                    <TableCell className="text-xs font-medium py-2">
                       <Link href={`/invoices/${invoice.id}`} className="hover:underline">
                         {invoice.invoiceNumber}
                       </Link>
                     </TableCell>
-                    <TableCell>{getClientName(invoice.clientId)}</TableCell>
-                    <TableCell>{formatDate(invoice.issueDate, language)}</TableCell>
-                    <TableCell>{invoice.dueDate ? formatDate(invoice.dueDate, language) : '-'}</TableCell>
-                    <TableCell>{formatCurrency(invoice.total, language)}</TableCell>
-                    <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-xs py-2">{getClientName(invoice.clientId)}</TableCell>
+                    <TableCell className="text-xs py-2">{formatDate(invoice.issueDate, language)}</TableCell>
+                    <TableCell className="text-xs py-2">{invoice.dueDate ? formatDate(invoice.dueDate, language) : '-'}</TableCell>
+                    <TableCell className="text-xs py-2">{formatCurrency(invoice.total, language)}</TableCell>
+                    <TableCell className="py-2">{getStatusBadge(invoice.status)}</TableCell>
+                    <TableCell className="py-2">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
+                          <Button variant="ghost" size="icon" className="h-7 w-7">
+                            <MoreHorizontal className="h-3.5 w-3.5" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
                             <Link href={`/invoices/${invoice.id}`}>
-                              <Eye className="h-4 w-4 mr-2" />
+                              <Eye className="h-3.5 w-3.5 mr-2" />
                               {t('view')}
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link href={`/invoices/${invoice.id}/edit`}>
-                              <Edit className="h-4 w-4 mr-2" />
+                              <Edit className="h-3.5 w-3.5 mr-2" />
                               {t('edit')}
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link href={`/invoices/${invoice.id}/export`}>
-                              <FileDown className="h-4 w-4 mr-2" />
+                              <FileDown className="h-3.5 w-3.5 mr-2" />
                               {t('download')}
                             </Link>
                           </DropdownMenuItem>
@@ -274,7 +254,7 @@ function InvoicesContent() {
                             className="text-destructive"
                             onClick={() => setDeleteId(invoice.id)}
                           >
-                            <Trash2 className="h-4 w-4 mr-2" />
+                            <Trash2 className="h-3.5 w-3.5 mr-2" />
                             {t('delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
