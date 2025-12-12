@@ -251,3 +251,20 @@ export const bankTransactions = sqliteTable('bank_transactions', {
   matchedPaymentId: integer('matched_payment_id').references(() => payments.id),
   importedAt: text('imported_at').notNull(),
 });
+
+// Subscriptions table for user subscription management
+export const subscriptions = sqliteTable('subscriptions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  clerkUserId: text('clerk_user_id').notNull().unique(),
+  tier: text('tier').notNull().default('free'), // 'free', 'trial', 'premium'
+  status: text('status').notNull().default('inactive'), // 'inactive', 'active', 'expired', 'cancelled'
+  trialActivatedAt: text('trial_activated_at'),
+  trialExpiresAt: text('trial_expires_at'),
+  premiumStartedAt: text('premium_started_at'),
+  premiumExpiresAt: text('premium_expires_at'),
+  agreedToTermsAt: text('agreed_to_terms_at'),
+  paymentId: text('payment_id'),
+  planType: text('plan_type'), // 'basic', 'pro'
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});

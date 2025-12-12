@@ -23,6 +23,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   LayoutDashboard,
   FileText,
@@ -38,7 +40,12 @@ import {
   ChevronDown,
   PanelLeftClose,
   PanelLeft,
+  Crown,
+  Sparkles,
+  Lock,
+  Zap,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -55,6 +62,15 @@ const navItems = [
   { key: 'settings', href: '/settings', icon: Settings },
 ];
 
+interface Subscription {
+  tier: 'free' | 'trial' | 'premium';
+  status: 'inactive' | 'active' | 'expired' | 'cancelled';
+  isExpired: boolean;
+  daysRemaining: number;
+  needsActivation: boolean;
+  planType?: string;
+}
+
 export default function AppLayout({ children }: AppLayoutProps) {
   const { t, language, setLanguage, isRTL } = useI18n();
   const { user, isLoaded } = useUser();
@@ -63,6 +79,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
 
   useEffect(() => {
     if (isLoaded && !user) {
@@ -77,6 +95,31 @@ export default function AppLayout({ children }: AppLayoutProps) {
     }
   }, []);
 
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      if (!user) return;
+      try {
+        const res = await fetch('/api/subscriptions');
+        const data = await res.json();
+        setSubscription(data);
+
+        if (data.needsActivation && pathname !== '/activate') {
+          router.push('/activate');
+        } else if (data.isExpired && pathname !== '/upgrade') {
+          router.push('/upgrade');
+        }
+      } catch (err) {
+        console.error('Failed to fetch subscription');
+      } finally {
+        setSubscriptionLoading(false);
+      }
+    };
+
+    if (isLoaded && user) {
+      fetchSubscription();
+    }
+  }, [isLoaded, user, pathname, router]);
+
   const toggleSidebar = () => {
     const newState = !sidebarCollapsed;
     setSidebarCollapsed(newState);
@@ -90,6 +133,20 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   const toggleLanguage = () => {
     setLanguage(language === 'en' ? 'ur' : 'en');
+  };
+
+  const getTierLabel = () => {
+    if (!subscription) return 'Free';
+    if (subscription.tier === 'premium') return 'Premium';
+    if (subscription.tier === 'trial') return 'Free Tier';
+    return 'Free';
+  };
+
+  const getTierColor = () => {
+    if (!subscription) return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+    if (subscription.tier === 'premium') return 'bg-gradient-to-r from-purple-600 to-pink-600 text-white';
+    if (subscription.tier === 'trial') return 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white';
+    return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
   };
 
   if (!isLoaded) {
@@ -108,6 +165,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const userEmail = user.primaryEmailAddress?.emailAddress || '';
   const userInitial = userName.charAt(0).toUpperCase();
   const userImage = user.imageUrl;
+
+  const isLocked = subscription?.isExpired || subscription?.needsActivation;
 
   const NavLink = ({ item, collapsed }: { item: typeof navItems[0]; collapsed?: boolean }) => {
     const Icon = item.icon;
@@ -143,6 +202,58 @@ export default function AppLayout({ children }: AppLayoutProps) {
     return linkContent;
   };
 
+  const SubscriptionBadge = ({ collapsed }: { collapsed?: boolean }) => (
+    <div className={`${collapsed ? 'px-1' : 'px-2'} py-2 border-b border-white/10`}>
+      {collapsed ? (
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <div className="flex justify-center">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getTierColor()}`}>
+                {subscription?.tier === 'premium' ? (
+                  <Crown className="h-4 w-4" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+              </div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side={isRTL ? 'left' : 'right'}>
+            <div className="text-xs">
+              <div className="font-semibold">{getTierLabel()}</div>
+              {subscription?.daysRemaining !== undefined && subscription.daysRemaining > 0 && (
+                <div className="text-muted-foreground">{subscription.daysRemaining} days left</div>
+              )}
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      ) : (
+        <div className={`rounded-lg p-2 ${getTierColor()}`}>
+          <div className="flex items-center gap-2">
+            {subscription?.tier === 'premium' ? (
+              <Crown className="h-4 w-4" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-semibold">{getTierLabel()}</div>
+              {subscription?.daysRemaining !== undefined && subscription.daysRemaining > 0 && (
+                <div className="text-xs opacity-80">{subscription.daysRemaining} days left</div>
+              )}
+            </div>
+          </div>
+          {subscription?.tier !== 'premium' && (
+            <Link href="/upgrade">
+              <Button size="sm" variant="secondary" className="w-full mt-2 h-7 text-xs bg-white/20 hover:bg-white/30">
+                <Zap className="h-3 w-3 mr-1" />
+                Upgrade
+              </Button>
+            </Link>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   const Sidebar = ({ collapsed = false }: { collapsed?: boolean }) => (
     <div className="flex flex-col h-full bg-transparent">
       <div className={`${collapsed ? 'p-2' : 'p-3'} border-b flex items-center justify-center border-white/10`}>
@@ -156,6 +267,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </Link>
         )}
       </div>
+
+      <SubscriptionBadge collapsed={collapsed} />
 
       <div className={`${collapsed ? 'px-1 py-2' : 'px-2 py-2'} flex justify-center border-b border-white/10`}>
         <Tooltip delayDuration={0}>
@@ -224,12 +337,37 @@ export default function AppLayout({ children }: AppLayoutProps) {
           <AurexLogo size="sm" variant="full" />
         </Link>
       </div>
+      <div className="p-3 border-b">
+        <div className={`rounded-lg p-2 ${getTierColor()}`}>
+          <div className="flex items-center gap-2">
+            {subscription?.tier === 'premium' ? (
+              <Crown className="h-4 w-4" />
+            ) : (
+              <Sparkles className="h-4 w-4" />
+            )}
+            <div className="flex-1">
+              <div className="text-xs font-semibold">{getTierLabel()}</div>
+              {subscription?.daysRemaining !== undefined && subscription.daysRemaining > 0 && (
+                <div className="text-xs opacity-80">{subscription.daysRemaining} days left</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
       <nav className="flex-1 p-3 space-y-1">
         {navItems.map((item) => (
           <NavLink key={item.key} item={item} collapsed={false} />
         ))}
       </nav>
-      <div className="p-3 border-t">
+      <div className="p-3 border-t space-y-2">
+        {subscription?.tier !== 'premium' && (
+          <Link href="/upgrade" onClick={() => setMobileOpen(false)}>
+            <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+              <Zap className="h-4 w-4 mr-2" />
+              Upgrade to Premium
+            </Button>
+          </Link>
+        )}
         <Button
           variant="ghost"
           className="w-full justify-start gap-2 h-8 text-sm"
@@ -238,14 +376,63 @@ export default function AppLayout({ children }: AppLayoutProps) {
           <Globe className="h-4 w-4" />
           {language === 'en' ? 'اردو' : 'English'}
         </Button>
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-2 h-8 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+          onClick={handleSignOut}
+        >
+          <LogOut className="h-4 w-4" />
+          {t('logout')}
+        </Button>
       </div>
     </div>
   );
 
+  if (isLocked && pathname !== '/upgrade' && pathname !== '/activate') {
+    return (
+      <TooltipProvider>
+        <div className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center p-4">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-tr from-red-500/20 via-orange-500/20 to-yellow-500/20 rounded-full blur-3xl -z-10 opacity-60" />
+          
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="max-w-md w-full"
+          >
+            <Card className="border border-red-200 dark:border-red-900 bg-white/80 dark:bg-black/80 backdrop-blur-xl shadow-2xl">
+              <CardContent className="p-8 text-center">
+                <div className="w-20 h-20 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mx-auto mb-6">
+                  <Lock className="h-10 w-10 text-red-500" />
+                </div>
+                <h2 className="text-2xl font-bold mb-2">Account Locked</h2>
+                <p className="text-muted-foreground mb-6">
+                  {subscription?.needsActivation 
+                    ? "Please activate your free trial to continue using all features."
+                    : "Your subscription has expired. Upgrade to premium to continue using all features."}
+                </p>
+                <div className="space-y-3">
+                  <Link href={subscription?.needsActivation ? "/activate" : "/upgrade"}>
+                    <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                      <Zap className="h-4 w-4 mr-2" />
+                      {subscription?.needsActivation ? "Activate Free Trial" : "Upgrade Now"}
+                    </Button>
+                  </Link>
+                  <Button variant="outline" className="w-full" onClick={handleSignOut}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </TooltipProvider>
+    );
+  }
+
   return (
     <TooltipProvider>
       <div className={`min-h-screen bg-background relative overflow-hidden ${isRTL ? 'rtl' : 'ltr'}`}>
-        {/* Abstract Background Elements */}
         <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-tr from-purple-500/10 via-blue-500/10 to-cyan-500/10 rounded-full blur-3xl -z-10 opacity-60 pointer-events-none animate-pulse duration-[5000ms]" />
         <div className="fixed bottom-0 right-0 w-[800px] h-[600px] bg-gradient-to-bl from-pink-500/10 via-orange-500/10 to-yellow-500/10 rounded-full blur-3xl -z-10 opacity-40 pointer-events-none" />
 
