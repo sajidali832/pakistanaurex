@@ -125,8 +125,12 @@ function LoginForm() {
 
   if (step === 'code') {
     return (
-      <div className={`min-h-screen flex flex-col items-center justify-center bg-background p-4 ${isRTL ? 'rtl' : 'ltr'}`}>
-        <div className="absolute top-4 right-4 flex items-center gap-2">
+      <div className={`min-h-screen flex flex-col items-center justify-center bg-background p-4 relative overflow-hidden ${isRTL ? 'rtl' : 'ltr'}`}>
+        {/* Abstract Background Elements */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-tr from-purple-500/20 via-blue-500/20 to-cyan-500/20 rounded-full blur-3xl -z-10 opacity-60 pointer-events-none animate-pulse duration-[5000ms]" />
+        <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-gradient-to-bl from-pink-500/20 via-orange-500/20 to-yellow-500/20 rounded-full blur-3xl -z-10 opacity-40 pointer-events-none" />
+        
+        <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
           <ThemeToggle />
           <Button variant="ghost" size="sm" onClick={toggleLanguage}>
             <Globe className="h-4 w-4 mr-2" />
@@ -134,12 +138,12 @@ function LoginForm() {
           </Button>
         </div>
 
-        <div className="w-full max-w-sm space-y-6">
+        <div className="w-full max-w-sm space-y-6 relative z-10">
           <div className="flex flex-col items-center space-y-2">
             <AurexLogo size="md" variant="full" />
           </div>
 
-          <Card className="border">
+          <Card className="border bg-white/40 dark:bg-black/40 backdrop-blur-xl shadow-xl">
             <CardHeader className="text-center pb-2">
               <div className="mx-auto w-12 h-12 bg-muted rounded-full flex items-center justify-center mb-3">
                 <Mail className="h-6 w-6 text-muted-foreground" />
@@ -210,8 +214,12 @@ function LoginForm() {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col items-center justify-center bg-background p-4 ${isRTL ? 'rtl' : 'ltr'}`}>
-      <div className="absolute top-4 right-4 flex items-center gap-2">
+    <div className={`min-h-screen flex flex-col items-center justify-center bg-background p-4 relative overflow-hidden ${isRTL ? 'rtl' : 'ltr'}`}>
+      {/* Abstract Background Elements */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-tr from-purple-500/20 via-blue-500/20 to-cyan-500/20 rounded-full blur-3xl -z-10 opacity-60 pointer-events-none animate-pulse duration-[5000ms]" />
+      <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-gradient-to-bl from-pink-500/20 via-orange-500/20 to-yellow-500/20 rounded-full blur-3xl -z-10 opacity-40 pointer-events-none" />
+
+      <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
         <ThemeToggle />
         <Button variant="ghost" size="sm" onClick={toggleLanguage}>
           <Globe className="h-4 w-4 mr-2" />
@@ -219,13 +227,13 @@ function LoginForm() {
         </Button>
       </div>
 
-      <div className="w-full max-w-sm space-y-6">
+      <div className="w-full max-w-sm space-y-6 relative z-10">
         <div className="flex flex-col items-center space-y-2">
           <AurexLogo size="md" variant="full" />
           <p className="text-muted-foreground text-sm text-center">{t('tagline')}</p>
         </div>
 
-        <Card className="border">
+        <Card className="border bg-white/40 dark:bg-black/40 backdrop-blur-xl shadow-xl">
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-lg">{t('login')}</CardTitle>
             <CardDescription className="text-sm">{t('welcomeBack')}</CardDescription>

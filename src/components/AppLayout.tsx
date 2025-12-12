@@ -144,8 +144,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
   };
 
   const Sidebar = ({ collapsed = false }: { collapsed?: boolean }) => (
-    <div className="flex flex-col h-full bg-background">
-      <div className={`${collapsed ? 'p-2' : 'p-3'} border-b flex items-center justify-center`}>
+    <div className="flex flex-col h-full bg-transparent">
+      <div className={`${collapsed ? 'p-2' : 'p-3'} border-b flex items-center justify-center border-white/10`}>
         {collapsed ? (
           <Link href="/dashboard" className="flex items-center justify-center">
             <AurexLogo size="sm" variant="icon" />
@@ -157,7 +157,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         )}
       </div>
 
-      <div className={`${collapsed ? 'px-1 py-2' : 'px-2 py-2'} flex justify-center border-b`}>
+      <div className={`${collapsed ? 'px-1 py-2' : 'px-2 py-2'} flex justify-center border-b border-white/10`}>
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
             <Button
@@ -185,7 +185,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         ))}
       </nav>
 
-      <div className={`${collapsed ? 'px-1' : 'px-2'} border-t py-2`}>
+      <div className={`${collapsed ? 'px-1' : 'px-2'} border-t border-white/10 py-2`}>
         {collapsed ? (
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
@@ -244,15 +244,19 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <TooltipProvider>
-      <div className={`min-h-screen bg-background ${isRTL ? 'rtl' : 'ltr'}`}>
+      <div className={`min-h-screen bg-background relative overflow-hidden ${isRTL ? 'rtl' : 'ltr'}`}>
+        {/* Abstract Background Elements */}
+        <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-tr from-purple-500/10 via-blue-500/10 to-cyan-500/10 rounded-full blur-3xl -z-10 opacity-60 pointer-events-none animate-pulse duration-[5000ms]" />
+        <div className="fixed bottom-0 right-0 w-[800px] h-[600px] bg-gradient-to-bl from-pink-500/10 via-orange-500/10 to-yellow-500/10 rounded-full blur-3xl -z-10 opacity-40 pointer-events-none" />
+
         <aside
-          className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col border-r bg-background transition-all duration-200 ${sidebarCollapsed ? 'lg:w-12' : 'lg:w-48'
+          className={`hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col border-r border-white/20 bg-background/60 backdrop-blur-xl transition-all duration-200 ${sidebarCollapsed ? 'lg:w-12' : 'lg:w-48'
             }`}
         >
           <Sidebar collapsed={sidebarCollapsed} />
         </aside>
 
-        <header className="lg:hidden sticky top-0 z-50 flex h-12 items-center gap-3 border-b bg-background px-3">
+        <header className="lg:hidden sticky top-0 z-50 flex h-12 items-center gap-3 border-b border-white/20 bg-background/60 backdrop-blur-xl px-3">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -295,7 +299,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
         <main className={`transition-all duration-200 ${sidebarCollapsed ? 'lg:pl-12' : 'lg:pl-48'
           }`}>
-          <header className="hidden lg:flex h-12 items-center justify-between border-b bg-background px-4">
+          <header className="hidden lg:flex h-12 items-center justify-between border-b border-white/20 bg-background/60 backdrop-blur-xl px-4">
             <h1 className="text-sm font-medium">
               {navItems.find(item => pathname.startsWith(item.href))?.key
                 ? t(navItems.find(item => pathname.startsWith(item.href))!.key)

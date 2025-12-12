@@ -25,11 +25,10 @@ export function PublicHeader() {
   }, []);
 
   const navItems = [
-    { name: 'Home', href: '/' },
-    { name: 'Features', href: '/#features' },
-    { name: 'Pricing', href: '/pricing' }, // Assuming these pages/sections might exist or will be added
-    { name: 'Testimonials', href: '/#testimonials' },
-    { name: 'About', href: '/about' },
+    { name: 'Blog', href: '/blog' },
+    { name: 'Privacy', href: '/privacy' },
+    { name: 'Terms', href: '/terms' },
+    { name: 'Support', href: '/support' },
     { name: 'Contact', href: '/contact' },
   ];
 
@@ -49,25 +48,30 @@ export function PublicHeader() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`relative px-4 py-2 text-sm font-medium transition-colors hover:text-primary ${
-                  pathname === item.href ? 'text-primary' : 'text-muted-foreground'
-                }`}
-              >
-                {item.name}
-                {pathname === item.href && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute inset-0 bg-primary/10 rounded-full -z-10"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-              </Link>
-            ))}
+          <nav className="hidden md:flex items-center gap-1">
+            {navItems.map((item) => {
+               const isActive = pathname === item.href;
+               return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`relative px-4 py-2 text-sm font-medium transition-colors hover:text-primary ${
+                    isActive ? 'text-primary' : 'text-muted-foreground'
+                  } group`}
+                >
+                  {item.name}
+                  {/* Underline animation */}
+                  <span className="absolute bottom-1 left-4 right-4 h-0.5 bg-primary origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100" />
+                  {isActive && (
+                     <motion.div
+                       layoutId="activeTab"
+                       className="absolute bottom-1 left-4 right-4 h-0.5 bg-primary rounded-full"
+                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                     />
+                  )}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Actions */}
