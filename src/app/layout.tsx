@@ -110,12 +110,14 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/icons/icon-192x192.svg", sizes: "192x192", type: "image/svg+xml" },
-      { url: "/icons/icon-512x512.svg", sizes: "512x512", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "32x32", type: "image/x-icon" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
     ],
     apple: [
-      { url: "/icons/icon-192x192.svg", sizes: "192x192", type: "image/svg+xml" },
+      { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
+    shortcut: "/favicon.ico",
   },
   category: 'Business Software',
   classification: 'Invoice Software, Accounting Software, Business Management',
@@ -140,7 +142,9 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <head>
-          <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
+          <link rel="icon" href="/favicon.ico" sizes="32x32" />
+          <link rel="icon" href="/icons/icon-192x192.png" sizes="192x192" type="image/png" />
+          <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
           <meta name="apple-mobile-web-app-capable" content="yes" />
           <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         </head>

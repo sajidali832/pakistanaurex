@@ -113,7 +113,7 @@ export default function LandingPage() {
             "@type": "Organization",
             "name": "Aurex",
             "url": "https://aurex.sbs",
-            "logo": "https://aurex.sbs/icons/icon-512x512.svg",
+            "logo": "https://aurex.sbs/icons/icon-512x512.png",
             "description": "Free invoicing and business management software for Pakistani SMBs",
             "address": {
               "@type": "PostalAddress",
