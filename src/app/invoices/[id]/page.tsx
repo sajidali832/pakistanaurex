@@ -121,9 +121,19 @@ function InvoiceDetailContent({ id }: { id: string }) {
         }),
       ]);
 
-      const invoiceData = await invoiceRes.json();
-      const linesData = await linesRes.json();
-      const companiesData = await companiesRes.json();
+      const safeParse = async (res: Response) => {
+        const text = await res.text();
+        try {
+          return JSON.parse(text);
+        } catch {
+          console.error('Non-JSON response:', text);
+          return null;
+        }
+      };
+
+      const invoiceData = invoiceRes.ok ? await safeParse(invoiceRes) : null;
+      const linesData = linesRes.ok ? await safeParse(linesRes) : [];
+      const companiesData = companiesRes.ok ? await safeParse(companiesRes) : [];
 
       setInvoice(invoiceData);
       setLines(Array.isArray(linesData) ? linesData : []);
@@ -133,8 +143,10 @@ function InvoiceDetailContent({ id }: { id: string }) {
         const clientRes = await fetch(`/api/clients?id=${invoiceData.clientId}`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
-        const clientData = await clientRes.json();
-        setClient(clientData);
+        if (clientRes.ok) {
+          const clientData = await safeParse(clientRes);
+          setClient(clientData);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch:', error);

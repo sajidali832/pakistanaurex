@@ -20,6 +20,15 @@ export default clerkMiddleware(async (auth, req) => {
   }
   
   if (!userId && !isPublicRoute(req)) {
+    // For API routes return a JSON 401 instead of an HTML redirect to avoid
+    // breaking client-side fetch calls that expect JSON.
+    if (req.nextUrl.pathname.startsWith('/api')) {
+      return NextResponse.json(
+        { error: 'Authentication required', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.redirect(new URL('/login', req.url));
   }
 });

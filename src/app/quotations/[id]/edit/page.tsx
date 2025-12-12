@@ -89,19 +89,31 @@ function EditQuotationContent({ id }: { id: string }) {
     const fetchData = async () => {
         try {
             const token = localStorage.getItem('bearer_token');
+            const headers = { 'Authorization': `Bearer ${token}` };
+
             const [quotationRes, linesRes, clientsRes, itemsRes, companiesRes] = await Promise.all([
-                fetch(`/api/quotations?id=${id}`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`/api/quotation-lines?quotationId=${id}`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch('/api/clients', { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch('/api/items', { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch('/api/companies', { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`/api/quotations?id=${id}`, { headers }),
+                fetch(`/api/quotation-lines?quotationId=${id}`, { headers }),
+                fetch('/api/clients', { headers }),
+                fetch('/api/items', { headers }),
+                fetch('/api/companies', { headers }),
             ]);
 
-            const quotationData = await quotationRes.json();
-            const linesData = await linesRes.json();
-            const clientsData = await clientsRes.json();
-            const itemsData = await itemsRes.json();
-            const companiesData = await companiesRes.json();
+            const safeParse = async (res: Response) => {
+                const text = await res.text();
+                try {
+                    return JSON.parse(text);
+                } catch {
+                    console.error('Non-JSON response:', text);
+                    return null;
+                }
+            };
+
+            const quotationData = quotationRes.ok ? await safeParse(quotationRes) : null;
+            const linesData = linesRes.ok ? await safeParse(linesRes) : [];
+            const clientsData = clientsRes.ok ? await safeParse(clientsRes) : [];
+            const itemsData = itemsRes.ok ? await safeParse(itemsRes) : [];
+            const companiesData = companiesRes.ok ? await safeParse(companiesRes) : [];
 
             setClients(Array.isArray(clientsData) ? clientsData : []);
             setItems(Array.isArray(itemsData) ? itemsData : []);
@@ -112,14 +124,14 @@ function EditQuotationContent({ id }: { id: string }) {
 
             // Populate form
             if (quotationData) {
-                setClientId(quotationData.clientId.toString());
-                setQuotationNumber(quotationData.quotationNumber);
-                setIssueDate(quotationData.issueDate.split('T')[0]);
+                setClientId(quotationData.clientId?.toString() || '');
+                setQuotationNumber(quotationData.quotationNumber || '');
+                setIssueDate(quotationData.issueDate ? quotationData.issueDate.split('T')[0] : '');
                 setValidUntil(quotationData.validUntil ? quotationData.validUntil.split('T')[0] : '');
                 setNotes(quotationData.notes || '');
                 setTerms(quotationData.terms || '');
                 setDiscountAmount(quotationData.discountAmount || 0);
-                setStatus(quotationData.status);
+                setStatus(quotationData.status || 'draft');
             }
 
             // Populate lines

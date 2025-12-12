@@ -221,8 +221,33 @@ function NewTaxInvoiceContent() {
             if (res.ok) {
                 const savedInvoice = await res.json();
                 console.log('Tax invoice saved successfully:', savedInvoice);
+
+                // Persist to localStorage so the detail page can render line items/buyer info immediately
+                const stored = localStorage.getItem('tax_invoices');
+                const existing = stored ? JSON.parse(stored) : [];
+                const enriched = {
+                    id: savedInvoice.id,
+                    serialNumber,
+                    clientId: savedInvoice.clientId,
+                    issueDate: savedInvoice.issueDate,
+                    status: savedInvoice.status,
+                    totalExclTax: totalExclTax,
+                    totalTax: totalTax,
+                    total: grandTotal,
+                    buyerName: selectedClient?.name || '',
+                    buyerAddress: selectedClient?.address || '',
+                    buyerNtn: selectedClient?.ntnNumber || '',
+                    buyerStrn: selectedClient?.salesTaxRegistration || '',
+                    lineItems,
+                };
+                const updated = [
+                    ...existing.filter((i: any) => i.id !== savedInvoice.id),
+                    enriched,
+                ];
+                localStorage.setItem('tax_invoices', JSON.stringify(updated));
+
                 toast.success('Sales Tax Invoice created successfully');
-                router.push('/tax-invoices');
+                router.push(`/tax-invoices/${savedInvoice.id}`);
             } else {
                 const error = await res.json();
                 console.error('Save failed:', error);

@@ -74,16 +74,45 @@ function TaxInvoiceDetailContent({ id }: { id: string }) {
     const fetchData = async () => {
         try {
             const token = localStorage.getItem('bearer_token');
+            const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-            // Get tax invoice from localStorage
+            // Try localStorage first (used right after creation)
             const storedInvoices = localStorage.getItem('tax_invoices');
             const invoices = storedInvoices ? JSON.parse(storedInvoices) : [];
-            const inv = invoices.find((i: TaxInvoice) => i.id === parseInt(id));
+            let inv = invoices.find((i: TaxInvoice) => i.id === parseInt(id)) || null;
 
-            const companiesRes = await fetch('/api/companies', {
-                headers: { 'Authorization': `Bearer ${token}` },
-            });
-            const companiesData = await companiesRes.json();
+            // Fallback to API so existing invoices can be viewed even if localStorage is empty
+            if (!inv) {
+                const apiRes = await fetch(`/api/tax-invoices?id=${id}`, { headers });
+                const text = await apiRes.text();
+                if (apiRes.ok) {
+                    try {
+                        const apiData = JSON.parse(text);
+                        inv = {
+                            id: apiData.id,
+                            serialNumber: apiData.invoiceNumber ?? `INV-${apiData.id}`,
+                            clientId: apiData.clientId,
+                            issueDate: apiData.issueDate,
+                            status: apiData.status,
+                            totalExclTax: apiData.subtotal ?? 0,
+                            totalTax: apiData.taxAmount ?? 0,
+                            total: apiData.total ?? 0,
+                            buyerName: apiData.buyerName || 'Buyer',
+                            buyerAddress: apiData.buyerAddress || '',
+                            buyerNtn: apiData.buyerNtn || '',
+                            buyerStrn: apiData.buyerStrn || '',
+                            lineItems: [],
+                        };
+                    } catch {
+                        console.error('Non-JSON tax invoice response:', text);
+                    }
+                } else {
+                    console.error('Failed to load tax invoice:', apiRes.status, text);
+                }
+            }
+
+            const companiesRes = await fetch('/api/companies', { headers });
+            const companiesData = companiesRes.ok ? await companiesRes.json() : [];
 
             setInvoice(inv || null);
             setCompany(Array.isArray(companiesData) ? companiesData[0] : null);

@@ -74,7 +74,7 @@ interface Company {
   strnNumber: string;
 }
 
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 function QuotationDetailContent({ id }: { id: string }) {
@@ -103,9 +103,19 @@ function QuotationDetailContent({ id }: { id: string }) {
         fetch('/api/companies', { headers }),
       ]);
 
-      const quotationData = await quotationRes.json();
-      const linesData = await linesRes.json();
-      const companiesData = await companiesRes.json();
+      const safeParse = async (res: Response) => {
+        const text = await res.text();
+        try {
+          return JSON.parse(text);
+        } catch {
+          console.error('Non-JSON response:', text);
+          return null;
+        }
+      };
+
+      const quotationData = quotationRes.ok ? await safeParse(quotationRes) : null;
+      const linesData = linesRes.ok ? await safeParse(linesRes) : [];
+      const companiesData = companiesRes.ok ? await safeParse(companiesRes) : [];
 
       setQuotation(quotationData);
       setLines(Array.isArray(linesData) ? linesData : []);
@@ -113,8 +123,10 @@ function QuotationDetailContent({ id }: { id: string }) {
 
       if (quotationData?.clientId) {
         const clientRes = await fetch(`/api/clients?id=${quotationData.clientId}`, { headers });
-        const clientData = await clientRes.json();
-        setClient(clientData);
+        if (clientRes.ok) {
+          const clientData = await safeParse(clientRes);
+          setClient(clientData);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch:', error);
@@ -291,7 +303,7 @@ function QuotationDetailContent({ id }: { id: string }) {
       }
     });
 
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    const finalY = ((doc as any).lastAutoTable?.finalY ?? 95) + 10;
 
     // Totals
     doc.setFontSize(10);
