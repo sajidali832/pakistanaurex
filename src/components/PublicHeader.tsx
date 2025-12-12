@@ -40,15 +40,15 @@ export function PublicHeader() {
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         className="fixed top-6 inset-x-0 z-50 flex justify-center px-4 pointer-events-none"
       >
-        <div className="pointer-events-auto bg-white/80 dark:bg-black/80 backdrop-blur-md border border-black/5 dark:border-white/10 shadow-lg shadow-black/5 rounded-full px-2 py-2 flex items-center gap-1 sm:gap-2 max-w-fit mx-auto transition-all duration-300 hover:shadow-xl hover:scale-[1.01]">
+        <div className="pointer-events-auto bg-white/60 dark:bg-black/60 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-xl shadow-black/5 rounded-full px-6 py-3 flex items-center gap-4 max-w-fit mx-auto transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]">
           {/* Logo - Icon only on mobile, Full on desktop */}
-          <Link href="/" className="pl-4 pr-2 flex items-center">
+          <Link href="/" className="flex items-center">
              <AurexLogo size="sm" variant="icon" className="sm:hidden" />
              <AurexLogo size="sm" variant="full" className="hidden sm:flex" />
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-2">
             {navItems.map((item) => {
                const isActive = pathname === item.href;
                return (
@@ -75,21 +75,21 @@ export function PublicHeader() {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-2 pl-2 pr-2">
+          <div className="flex items-center gap-3 pl-2">
             <ThemeToggle />
             
-            <div className="h-6 w-px bg-border mx-1 hidden sm:block" />
+            <div className="h-6 w-px bg-border/50 hidden sm:block" />
             
             {isLoaded && isSignedIn ? (
               <Link href="/dashboard">
-                <Button size="sm" className="rounded-full px-6 h-10 bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-blue-500/25 transition-all">
+                <Button size="sm" className="rounded-full px-6 h-10 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg shadow-blue-500/20 transition-all border-none">
                   Dashboard
                 </Button>
               </Link>
             ) : (
               <Link href="/register">
-                <Button size="sm" className="rounded-full px-6 h-10 bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-blue-500/25 transition-all">
-                  Let's Talk
+                <Button size="sm" className="rounded-full px-6 h-10 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg shadow-blue-500/20 transition-all border-none">
+                  Start Free
                 </Button>
               </Link>
             )}

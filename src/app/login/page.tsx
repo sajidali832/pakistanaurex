@@ -233,21 +233,22 @@ function LoginForm() {
           <p className="text-muted-foreground text-sm text-center">{t('tagline')}</p>
         </div>
 
-        <Card className="border bg-white/40 dark:bg-black/40 backdrop-blur-xl shadow-xl">
-          <CardHeader className="text-center pb-4">
-            <CardTitle className="text-lg">{t('login')}</CardTitle>
+        <Card className="border border-white/20 dark:border-white/10 bg-white/30 dark:bg-black/30 backdrop-blur-2xl shadow-2xl relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-white/10 dark:from-white/5 dark:to-transparent pointer-events-none" />
+          <CardHeader className="text-center pb-4 relative z-10">
+            <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{t('login')}</CardTitle>
             <CardDescription className="text-sm">{t('welcomeBack')}</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="relative z-10">
             {error && (
-              <Alert variant="destructive" className="mb-4">
+              <Alert variant="destructive" className="mb-4 bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400">
                 <AlertDescription className="text-sm">{error}</AlertDescription>
               </Alert>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-3">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-sm">{t('email')}</Label>
+                <Label htmlFor="email" className="text-sm font-medium">{t('email')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -256,12 +257,12 @@ function LoginForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={loading}
-                  className="h-9"
+                  className="h-10 bg-white/50 dark:bg-black/20 border-white/20 focus:border-blue-500/50 focus:ring-blue-500/20 transition-all"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-sm">{t('password')}</Label>
+                <Label htmlFor="password" className="text-sm font-medium">{t('password')}</Label>
                 <Input
                   id="password"
                   type="password"
@@ -271,13 +272,13 @@ function LoginForm() {
                   required
                   disabled={loading}
                   autoComplete="current-password"
-                  className="h-9"
+                  className="h-10 bg-white/50 dark:bg-black/20 border-white/20 focus:border-purple-500/50 focus:ring-purple-500/20 transition-all"
                 />
               </div>
 
               <Button
                 type="submit"
-                className="w-full h-9 text-sm"
+                className="w-full h-10 text-sm font-bold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-blue-500/20 transition-all"
                 disabled={loading}
               >
                 {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
@@ -285,10 +286,10 @@ function LoginForm() {
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="flex justify-center pt-0">
+          <CardFooter className="flex justify-center pt-0 relative z-10">
             <p className="text-sm text-muted-foreground">
               {t('noAccount')}{' '}
-              <Link href="/register" className="text-primary hover:underline">
+              <Link href="/register" className="text-purple-600 dark:text-purple-400 hover:underline font-medium">
                 {t('register')}
               </Link>
             </p>
@@ -302,7 +303,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <I18nProvider>
-      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>}>
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>} >
         <LoginForm />
       </Suspense>
     </I18nProvider>
