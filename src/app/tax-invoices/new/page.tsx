@@ -117,13 +117,6 @@ function NewTaxInvoiceContent() {
                 const company = await companyRes.json();
                 setCompanySettings(company);
 
-                // Check if company settings are complete
-                if (!company.name || !company.address || !company.ntnNumber) {
-                    toast.error('Please complete your company settings before creating tax invoices');
-                    router.push('/settings');
-                    return;
-                }
-
                 const defaultTaxRate = company.defaultTaxRate ?? 17;
                 setLineItems([
                     { id: '1', serialNo: 1, description: '', quantity: 1, rate: 0, valueExclTax: 0, taxRate: defaultTaxRate, taxPayable: 0, valueInclTax: 0 }

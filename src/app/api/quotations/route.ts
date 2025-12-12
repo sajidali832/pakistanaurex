@@ -1,12 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { db } from '@/db';
-import { quotations } from '@/db/schema';
+import { quotations, user } from '@/db/schema';
 import { eq, like, and, desc } from 'drizzle-orm';
 
 const VALID_STATUSES = ['draft', 'sent', 'accepted', 'rejected', 'converted'] as const;
 
+async function getUserCompanyId() {
+  const { userId } = await auth();
+  if (!userId) return null;
+
+  const currentUser = await db
+    .select()
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1);
+
+  return currentUser[0]?.companyId || null;
+}
+
 export async function GET(request: NextRequest) {
   try {
+    const companyId = await getUserCompanyId();
+    if (!companyId) {
+      return NextResponse.json(
+        { error: 'Authentication required', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -21,7 +43,7 @@ export async function GET(request: NextRequest) {
       const quotation = await db
         .select()
         .from(quotations)
-        .where(eq(quotations.id, parseInt(id)))
+        .where(and(eq(quotations.id, parseInt(id)), eq(quotations.companyId, companyId)))
         .limit(1);
 
       if (quotation.length === 0) {
@@ -40,7 +62,7 @@ export async function GET(request: NextRequest) {
     const clientId = searchParams.get('clientId');
     const status = searchParams.get('status');
 
-    const conditions = [];
+    const conditions = [eq(quotations.companyId, companyId)];
 
     if (search) {
       conditions.push(like(quotations.quotationNumber, `%${search}%`));
@@ -54,13 +76,10 @@ export async function GET(request: NextRequest) {
       conditions.push(eq(quotations.status, status));
     }
 
-    let query = db.select().from(quotations);
-
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-
-    const results = await query
+    const results = await db
+      .select()
+      .from(quotations)
+      .where(and(...conditions))
       .orderBy(desc(quotations.createdAt))
       .limit(limit)
       .offset(offset);
@@ -77,14 +96,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-
-    if (!body.companyId) {
+    const companyId = await getUserCompanyId();
+    if (!companyId) {
       return NextResponse.json(
-        { error: 'Company ID is required', code: 'MISSING_COMPANY_ID' },
-        { status: 400 }
+        { error: 'Authentication required', code: 'UNAUTHORIZED' },
+        { status: 401 }
       );
     }
+
+    const body = await request.json();
 
     if (!body.clientId) {
       return NextResponse.json(
@@ -115,7 +135,7 @@ export async function POST(request: NextRequest) {
     }
 
     const quotationData = {
-      companyId: parseInt(body.companyId),
+      companyId: companyId,
       clientId: parseInt(body.clientId),
       quotationNumber: body.quotationNumber.trim(),
       issueDate: body.issueDate,
@@ -147,6 +167,14 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const companyId = await getUserCompanyId();
+    if (!companyId) {
+      return NextResponse.json(
+        { error: 'Authentication required', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -160,7 +188,7 @@ export async function PUT(request: NextRequest) {
     const existing = await db
       .select()
       .from(quotations)
-      .where(eq(quotations.id, parseInt(id)))
+      .where(and(eq(quotations.id, parseInt(id)), eq(quotations.companyId, companyId)))
       .limit(1);
 
     if (existing.length === 0) {
@@ -181,7 +209,6 @@ export async function PUT(request: NextRequest) {
 
     const updateData: any = {};
 
-    if (body.companyId !== undefined) updateData.companyId = parseInt(body.companyId);
     if (body.clientId !== undefined) updateData.clientId = parseInt(body.clientId);
     if (body.quotationNumber !== undefined) updateData.quotationNumber = body.quotationNumber.trim();
     if (body.issueDate !== undefined) updateData.issueDate = body.issueDate;
@@ -194,11 +221,12 @@ export async function PUT(request: NextRequest) {
     if (body.currency !== undefined) updateData.currency = body.currency.trim();
     if (body.notes !== undefined) updateData.notes = body.notes ? body.notes.trim() : null;
     if (body.terms !== undefined) updateData.terms = body.terms ? body.terms.trim() : null;
+    if (body.convertedInvoiceId !== undefined) updateData.convertedInvoiceId = body.convertedInvoiceId ? parseInt(body.convertedInvoiceId) : null;
 
     const updated = await db
       .update(quotations)
       .set(updateData)
-      .where(eq(quotations.id, parseInt(id)))
+      .where(and(eq(quotations.id, parseInt(id)), eq(quotations.companyId, companyId)))
       .returning();
 
     return NextResponse.json(updated[0], { status: 200 });
@@ -213,6 +241,14 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const companyId = await getUserCompanyId();
+    if (!companyId) {
+      return NextResponse.json(
+        { error: 'Authentication required', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -226,7 +262,7 @@ export async function DELETE(request: NextRequest) {
     const existing = await db
       .select()
       .from(quotations)
-      .where(eq(quotations.id, parseInt(id)))
+      .where(and(eq(quotations.id, parseInt(id)), eq(quotations.companyId, companyId)))
       .limit(1);
 
     if (existing.length === 0) {
@@ -238,7 +274,7 @@ export async function DELETE(request: NextRequest) {
 
     const deleted = await db
       .delete(quotations)
-      .where(eq(quotations.id, parseInt(id)))
+      .where(and(eq(quotations.id, parseInt(id)), eq(quotations.companyId, companyId)))
       .returning();
 
     return NextResponse.json({ message: 'Quotation deleted successfully', quotation: deleted[0] }, { status: 200 });

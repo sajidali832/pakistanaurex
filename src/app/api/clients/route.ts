@@ -4,60 +4,32 @@ import { db } from '@/db';
 import { clients, companies, user } from '@/db/schema';
 import { eq, like, and, or, desc } from 'drizzle-orm';
 
+async function getUserCompanyId() {
+  const { userId } = await auth();
+  if (!userId) return null;
+
+  const currentUser = await db
+    .select()
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1);
+
+  return currentUser[0]?.companyId || null;
+}
+
 export async function GET(request: NextRequest) {
   try {
-    // const { userId } = await auth();
-
-    // if (!userId) {
-    //   return NextResponse.json(
-    //     { error: 'Authentication required', code: 'UNAUTHORIZED' },
-    //     { status: 401 }
-    //   );
-    // }
-
-    // const existingUser = await db
-    //   .select()
-    //   .from(user)
-    //   .where(eq(user.id, userId))
-    //   .limit(1);
-
-    // Ensure we have a user row; if not, create one with a unique placeholder email
-    // let currentUser = existingUser;
-    // if (currentUser.length === 0) {
-    //   const placeholderEmail = `${userId}@placeholder.local`;
-
-    //   const newUser = await db
-    //     .insert(user)
-    //     .values({
-    //       id: userId,
-    //       name: 'User',
-    //       email: placeholderEmail,
-    //       emailVerified: false,
-    //       createdAt: new Date(),
-    //       updatedAt: new Date(),
-    //     })
-    //     .returning();
-
-    //   currentUser = newUser;
-    // }
-
-    // if (!currentUser[0].companyId) {
-    //   return NextResponse.json(
-    //     { error: 'User has no company associated', code: 'NO_COMPANY' },
-    //     { status: 400 }
-    //   );
-    // }
-
-    // const companyIdFromUser = currentUser[0].companyId;
-
-    // TEMP: Hardcode companyId for testing
-    const companyIdFromUser = 1;
+    const companyIdFromUser = await getUserCompanyId();
+    if (!companyIdFromUser) {
+      return NextResponse.json(
+        { error: 'Authentication required', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
 
     const searchParams = request.nextUrl.searchParams;
-
     const id = searchParams.get('id');
 
-    // Single client by ID
     if (id) {
       if (!id || isNaN(parseInt(id))) {
         return NextResponse.json(
@@ -82,42 +54,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(client[0]);
     }
 
-    // List clients with pagination, search, and filters
     const limit = Math.min(parseInt(searchParams.get('limit') ?? '10'), 100);
     const offset = parseInt(searchParams.get('offset') ?? '0');
     const search = searchParams.get('search');
-    const companyId = companyIdFromUser?.toString();
 
-    let query = db.select().from(clients);
+    const conditions = [eq(clients.companyId, companyIdFromUser)];
 
-    const conditions = [];
-
-    // Filter by the current user's companyId
-    if (companyId) {
-      if (isNaN(parseInt(companyId))) {
-        return NextResponse.json(
-          { error: 'Valid company ID is required', code: 'INVALID_COMPANY_ID' },
-          { status: 400 }
-        );
-      }
-      conditions.push(eq(clients.companyId, parseInt(companyId)));
-    }
-
-    // Search by name or city
     if (search) {
       conditions.push(
         or(
           like(clients.name, `%${search}%`),
           like(clients.city, `%${search}%`)
-        )
+        )!
       );
     }
 
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-
-    const results = await query
+    const results = await db
+      .select()
+      .from(clients)
+      .where(and(...conditions))
       .orderBy(desc(clients.createdAt))
       .limit(limit)
       .offset(offset);
@@ -134,22 +89,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // const { userId } = await auth();
-
-    // if (!userId) {
-    //   return NextResponse.json(
-    //     { error: 'Authentication required', code: 'UNAUTHORIZED' },
-    //     { status: 401 }
-    //   );
-    // }
-
-    // TEMP: Hardcode companyId for testing
-    const companyIdFromUser = 1;
+    const companyIdFromUser = await getUserCompanyId();
+    if (!companyIdFromUser) {
+      return NextResponse.json(
+        { error: 'Authentication required', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
 
     const body = await request.json();
     const { name, nameUrdu, email, phone, address, city, ntnNumber, contactPerson, balance } = body;
 
-    // Validate required fields
     if (!name || typeof name !== 'string' || name.trim() === '') {
       return NextResponse.json(
         { error: 'Name is required and cannot be empty', code: 'MISSING_NAME' },
@@ -157,7 +107,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate email format if provided
     if (email && typeof email === 'string' && email.trim() !== '') {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email.trim())) {
@@ -168,7 +117,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Validate balance if provided
     if (balance !== undefined && balance !== null) {
       if (isNaN(parseFloat(balance))) {
         return NextResponse.json(
@@ -178,7 +126,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Verify company exists
     const company = await db
       .select()
       .from(companies)
@@ -192,7 +139,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Prepare insert data
     const insertData = {
       companyId: companyIdFromUser,
       name: name.trim(),
@@ -224,17 +170,13 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    // const { userId } = await auth();
-
-    // if (!userId) {
-    //   return NextResponse.json(
-    //     { error: 'Authentication required', code: 'UNAUTHORIZED' },
-    //     { status: 401 }
-    //   );
-    // }
-
-    // TEMP: Hardcode companyId for testing
-    const companyIdFromUser = 1;
+    const companyIdFromUser = await getUserCompanyId();
+    if (!companyIdFromUser) {
+      return NextResponse.json(
+        { error: 'Authentication required', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
 
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get('id');
@@ -249,30 +191,15 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const { name, nameUrdu, email, phone, address, city, ntnNumber, contactPerson, balance } = body;
 
-    // Check if client exists
     const existingClient = await db
       .select()
       .from(clients)
-      .where(eq(clients.id, parseInt(id)))
+      .where(and(eq(clients.id, parseInt(id)), eq(clients.companyId, companyIdFromUser)))
       .limit(1);
 
     if (existingClient.length === 0) {
       return NextResponse.json(
         { error: 'Client not found', code: 'CLIENT_NOT_FOUND' },
-        { status: 404 }
-      );
-    }
-
-    // Validate company for current user
-    const company = await db
-      .select()
-      .from(companies)
-      .where(eq(companies.id, companyIdFromUser))
-      .limit(1);
-
-    if (company.length === 0) {
-      return NextResponse.json(
-        { error: 'Company not found', code: 'COMPANY_NOT_FOUND' },
         { status: 404 }
       );
     }
@@ -301,10 +228,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Prepare update data
-    const updateData: any = {
-      companyId: companyIdFromUser,
-    };
+    const updateData: any = {};
 
     if (name !== undefined) updateData.name = name.trim();
     if (nameUrdu !== undefined) updateData.nameUrdu = nameUrdu && typeof nameUrdu === 'string' ? nameUrdu.trim() : null;
@@ -319,7 +243,7 @@ export async function PUT(request: NextRequest) {
     const updatedClient = await db
       .update(clients)
       .set(updateData)
-      .where(eq(clients.id, parseInt(id)))
+      .where(and(eq(clients.id, parseInt(id)), eq(clients.companyId, companyIdFromUser)))
       .returning();
 
     return NextResponse.json(updatedClient[0]);
@@ -334,6 +258,14 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const companyIdFromUser = await getUserCompanyId();
+    if (!companyIdFromUser) {
+      return NextResponse.json(
+        { error: 'Authentication required', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const id = searchParams.get('id');
 
@@ -344,11 +276,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Check if client exists
     const existingClient = await db
       .select()
       .from(clients)
-      .where(eq(clients.id, parseInt(id)))
+      .where(and(eq(clients.id, parseInt(id)), eq(clients.companyId, companyIdFromUser)))
       .limit(1);
 
     if (existingClient.length === 0) {
@@ -360,7 +291,7 @@ export async function DELETE(request: NextRequest) {
 
     const deleted = await db
       .delete(clients)
-      .where(eq(clients.id, parseInt(id)))
+      .where(and(eq(clients.id, parseInt(id)), eq(clients.companyId, companyIdFromUser)))
       .returning();
 
     return NextResponse.json({

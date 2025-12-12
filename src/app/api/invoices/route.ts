@@ -1,12 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { db } from '@/db';
-import { invoices } from '@/db/schema';
+import { invoices, user } from '@/db/schema';
 import { eq, like, and, desc } from 'drizzle-orm';
 
 const VALID_STATUSES = ['draft', 'sent', 'paid', 'overdue', 'cancelled'] as const;
 
+async function getUserCompanyId() {
+  const { userId } = await auth();
+  if (!userId) return null;
+
+  const currentUser = await db
+    .select()
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1);
+
+  return currentUser[0]?.companyId || null;
+}
+
 export async function GET(request: NextRequest) {
   try {
+    const companyId = await getUserCompanyId();
+    if (!companyId) {
+      return NextResponse.json(
+        { error: 'Authentication required', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -21,7 +43,7 @@ export async function GET(request: NextRequest) {
       const invoice = await db
         .select()
         .from(invoices)
-        .where(eq(invoices.id, parseInt(id)))
+        .where(and(eq(invoices.id, parseInt(id)), eq(invoices.companyId, companyId)))
         .limit(1);
 
       if (invoice.length === 0) {
@@ -40,7 +62,7 @@ export async function GET(request: NextRequest) {
     const clientId = searchParams.get('clientId');
     const status = searchParams.get('status');
 
-    const conditions = [];
+    const conditions = [eq(invoices.companyId, companyId)];
 
     if (search) {
       conditions.push(like(invoices.invoiceNumber, `%${search}%`));
@@ -57,13 +79,10 @@ export async function GET(request: NextRequest) {
       conditions.push(eq(invoices.status, status));
     }
 
-    let query = db.select().from(invoices);
-    
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-
-    const results = await query
+    const results = await db
+      .select()
+      .from(invoices)
+      .where(and(...conditions))
       .orderBy(desc(invoices.createdAt))
       .limit(limit)
       .offset(offset);
@@ -80,14 +99,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-
-    if (!body.companyId) {
+    const companyId = await getUserCompanyId();
+    if (!companyId) {
       return NextResponse.json(
-        { error: 'Company ID is required', code: 'MISSING_COMPANY_ID' },
-        { status: 400 }
+        { error: 'Authentication required', code: 'UNAUTHORIZED' },
+        { status: 401 }
       );
     }
+
+    const body = await request.json();
 
     if (!body.clientId) {
       return NextResponse.json(
@@ -128,7 +148,7 @@ export async function POST(request: NextRequest) {
     const now = new Date().toISOString();
 
     const invoiceData = {
-      companyId: parseInt(body.companyId),
+      companyId: companyId,
       clientId: parseInt(body.clientId),
       invoiceNumber: body.invoiceNumber.trim(),
       issueDate: body.issueDate,
@@ -161,6 +181,14 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const companyId = await getUserCompanyId();
+    if (!companyId) {
+      return NextResponse.json(
+        { error: 'Authentication required', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -176,7 +204,7 @@ export async function PUT(request: NextRequest) {
     const existingInvoice = await db
       .select()
       .from(invoices)
-      .where(eq(invoices.id, parseInt(id)))
+      .where(and(eq(invoices.id, parseInt(id)), eq(invoices.companyId, companyId)))
       .limit(1);
 
     if (existingInvoice.length === 0) {
@@ -195,7 +223,6 @@ export async function PUT(request: NextRequest) {
 
     const updates: any = { updatedAt: new Date().toISOString() };
 
-    if (body.companyId !== undefined) updates.companyId = parseInt(body.companyId);
     if (body.clientId !== undefined) updates.clientId = parseInt(body.clientId);
     if (body.invoiceNumber !== undefined) updates.invoiceNumber = body.invoiceNumber.trim();
     if (body.issueDate !== undefined) updates.issueDate = body.issueDate;
@@ -213,7 +240,7 @@ export async function PUT(request: NextRequest) {
     const updatedInvoice = await db
       .update(invoices)
       .set(updates)
-      .where(eq(invoices.id, parseInt(id)))
+      .where(and(eq(invoices.id, parseInt(id)), eq(invoices.companyId, companyId)))
       .returning();
 
     return NextResponse.json(updatedInvoice[0], { status: 200 });
@@ -228,6 +255,14 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const companyId = await getUserCompanyId();
+    if (!companyId) {
+      return NextResponse.json(
+        { error: 'Authentication required', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -241,7 +276,7 @@ export async function DELETE(request: NextRequest) {
     const existingInvoice = await db
       .select()
       .from(invoices)
-      .where(eq(invoices.id, parseInt(id)))
+      .where(and(eq(invoices.id, parseInt(id)), eq(invoices.companyId, companyId)))
       .limit(1);
 
     if (existingInvoice.length === 0) {
@@ -253,7 +288,7 @@ export async function DELETE(request: NextRequest) {
 
     const deleted = await db
       .delete(invoices)
-      .where(eq(invoices.id, parseInt(id)))
+      .where(and(eq(invoices.id, parseInt(id)), eq(invoices.companyId, companyId)))
       .returning();
 
     return NextResponse.json({ message: 'Invoice deleted successfully', invoice: deleted[0] }, { status: 200 });
