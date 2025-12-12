@@ -108,6 +108,17 @@ export default async function BlogPostPage({ params }: Props) {
                     {post.title}
                 </h1>
 
+                {/* Featured Image */}
+                {post.image && (
+                    <div className="relative w-full h-[300px] md:h-[400px] mb-8 rounded-2xl overflow-hidden shadow-lg">
+                        <img 
+                            src={post.image} 
+                            alt={post.title} 
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                )}
+
                 <p className="text-xl text-muted-foreground leading-relaxed border-l-4 border-primary/50 pl-6 italic">
                     {post.excerpt}
                 </p>

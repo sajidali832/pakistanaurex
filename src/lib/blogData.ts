@@ -1,4 +1,3 @@
-
 export interface BlogPost {
     slug: string;
     title: string;
@@ -22,6 +21,7 @@ export const blogPosts: BlogPost[] = [
         category: 'Invoicing',
         readTime: '8 min read',
         keywords: ['create invoice', 'professional invoice template', 'invoice requirements pakistan', 'small business billing', 'get paid faster'],
+        image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=800&q=80',
         content: `
 ## Why Your Invoice Design Matters
 A professional invoice is more than just a request for payment—it's a reflection of your business brand and professionalism. Studies show that well-designed, clear invoices are paid **30% faster** than confusing or cluttered ones.
@@ -61,6 +61,7 @@ With **Aurex**, you don't need to worry about formatting or missing details. Our
         category: 'Invoicing',
         readTime: '6 min read',
         keywords: ['invoice template free', 'excel invoice', 'invoicing software pakistan', 'automate billing', 'Aurex vs excel'],
+        image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=800&q=80',
         content: `
 ## The Hidden Cost of "Free" Templates
 When you start a business, using a free Word or Excel template seems like a smart, money-saving move. However, as you grow, manual templates become a bottleneck.
@@ -95,6 +96,7 @@ Transitioning is easier than you think. You can import your client list and star
         category: 'Invoicing',
         readTime: '4 min read',
         keywords: ['invoice vs receipt', 'difference invoice receipt', 'bookkeeping basics', 'proof of payment'],
+        image: 'https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=800&q=80',
         content: `
 ## The Core Difference
 The main difference is **timing**.
@@ -123,6 +125,7 @@ For accurate bookkeeping and FBR compliance, you need to track both "Accounts Re
         category: 'Quotations',
         readTime: '7 min read',
         keywords: ['write quotation', 'business proposal', 'win clients', 'quotation format', 'price quote'],
+        image: 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?auto=format&fit=crop&w=800&q=80',
         content: `
 ## A Quotation is a Sales Pitch
 Don't just send a price. Your quotation is often the final step in the sales process. It should reinforce why you are the best choice.
@@ -152,6 +155,7 @@ Ideally, your seamless workflow should allow you to convert an accepted quote di
         category: 'Tax & Compliance',
         readTime: '10 min read',
         keywords: ['fbr tax guide', 'small business tax pakistan', 'ntn registration', 'sales tax return', 'filer benefits'],
+        image: 'https://images.unsplash.com/photo-1586486855514-8c633cc6fd38?auto=format&fit=crop&w=800&q=80',
         content: `
 ## Why become a Filer?
 In Pakistan, becoming a "Filer" (Active Taxpayer) has significant benefits:
@@ -187,6 +191,7 @@ The golden rule of tax compliance is **documentation**.
         category: 'Quotations',
         readTime: '5 min read',
         keywords: ['quotation to invoice', 'business workflow', 'reduce data entry', 'invoice automation'],
+        image: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=800&q=80',
         content: `
 ## The Old Way vs. The Smart Way
 **The Old Way:**
@@ -217,6 +222,7 @@ The faster you invoice after acceptance, the faster you get paid. Delays in invo
         category: 'Financial Planning',
         readTime: '12 min read',
         keywords: ['accounting basics', 'small business accounting', 'debits and credits', 'assets vs liabilities', 'bookkeeping pakistan'],
+        image: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&w=800&q=80',
         content: `
 ## Why You Can't Ignore Accounting
 "I'm a creative/developer/consultant, not an accountant!"
@@ -246,6 +252,7 @@ You don't need a degree. You just need a system. Stop using shoeboxes for receip
         category: 'Tax & Compliance',
         readTime: '9 min read',
         keywords: ['gst registration pakistan', 'sales tax registration', 'strn application', 'fbr iris guide', 'sales tax return filing'],
+        image: 'https://images.unsplash.com/photo-1611974765270-ca1258634369?auto=format&fit=crop&w=800&q=80',
         content: `
 ## Who Needs to Register for Sales Tax?
 In Pakistan, you generally must register for Sales Tax if:
@@ -280,6 +287,7 @@ Once registered, you MUST file a monthly Sales Tax Return (on the 15th/18th of e
         category: 'Business Management',
         readTime: '8 min read',
         keywords: ['cash flow management', 'business finance tips', 'avoid bankruptcy', 'money management', 'invoice factoring'],
+        image: 'https://images.unsplash.com/photo-1565514020176-dbf227747046?auto=format&fit=crop&w=800&q=80',
         content: `
 ## What is Cash Flow?
 It's the movement of money in and out of your business. **Profit ≠ Cash Flow.** You can be "profitable" on paper (sent lots of invoices) but "insolvent" in reality (no cash in bank to pay rent).
@@ -303,6 +311,7 @@ It's the movement of money in and out of your business. **Profit ≠ Cash Flow.*
         category: 'Financial Planning',
         readTime: '6 min read',
         keywords: ['expense tracking', 'business expenses', 'tax deductions', 'receipt scanner', 'save money'],
+        image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=800&q=80',
         content: `
 ## The "Shoebox" Method is Dead
 If you wait until tax season to organize your receipts, you've already lost. Thermal receipts fade. You forget what that "Generie Store - 5000 PKR" charge was for.
@@ -333,6 +342,7 @@ Aurex's **Expense Manager** lets you do exactly this—keeping your books audit-
         category: 'Client Management',
         readTime: '7 min read',
         keywords: ['client management', 'crm for small business', 'customer retention', 'building business relationships'],
+        image: 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80',
         content: `
 ## Communication is Key
 The #1 reason clients leave isn't price—it's **poor service**.
@@ -358,13 +368,14 @@ Small gestures matter. improved invoicing etiquette, like adding a "Thank you fo
         category: 'Invoicing',
         readTime: '5 min read',
         keywords: ['payment terms', 'net 30 meaning', 'due on receipt', 'invoice payment terms', 'cash flow'],
+        image: 'https://images.unsplash.com/photo-1580519542036-c47de6196ba5?auto=format&fit=crop&w=800&q=80',
         content: `
 ## Common Payment Terms
 *   **Due on Receipt**: Payment is required immediately upon receiving the invoice. Best for small projects or new clients.
 *   **Net 10/15/30**: Payment is due 10, 15, or 30 days *after* the invoice date. Standard for B2B corporate work.
 *   **PIA (Payment in Advance)**: Full payment before work starts.
 
-## What is "2/10 Net 30"?
+## What is "2/10 Net 30"? 
 This is a smart incentive. It means: "The full amount is due in 30 days, BUT if you pay within 10 days, you get a 2% discount."
 This is a great strategy to encourage early payment without seeming desperate.
 
@@ -382,6 +393,7 @@ This is a great strategy to encourage early payment without seeming desperate.
         category: 'Invoicing',
         readTime: '6 min read',
         keywords: ['unpaid invoice email', 'payment reminder template', 'chase payment', 'overdue invoice letter', 'collections'],
+        image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
         content: `
 ## The Follow-Up Strategy
 Don't be afraid to ask for your money. You earned it.
@@ -409,6 +421,7 @@ Best,
         category: 'Invoicing',
         readTime: '4 min read',
         keywords: ['digital invoicing', 'paperless office', 'e-invoicing benefits', 'save printing costs', 'eco-friendly business'],
+        image: 'https://images.unsplash.com/photo-1518652133675-a1c1d636dbd0?auto=format&fit=crop&w=800&q=80',
         content: `
 ## The Cost of Paper
 It's not just the paper. It's the **ink**, the **printer maintenance**, the **envelopes**, the **stamps**, and the **storage space** for physical files.
@@ -433,6 +446,7 @@ Yes, digital invoices are fully recognized, provided they contain all necessary 
         category: 'Business Management',
         readTime: '8 min read',
         keywords: ['business management software', 'erp features', 'small business tools', 'software selection guide'],
+        image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80',
         content: `
 ## 1. Ease of Use
 If it takes a month to learn, you won't use it. Look for a clean, intuitive interface (UI).
@@ -459,6 +473,7 @@ Your financial data is sensitive. Ensure the provider uses SSL encryption and au
         category: 'Business Management',
         readTime: '10 min read',
         keywords: ['grow small business', 'business scaling strategies', 'digital marketing pakistan', 'efficiency tips', 'expand business'],
+        image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
         content: `
 ## 1. Master Your Operations
 Before you add more customers, ensure your "back office" can handle them. Automate your billing and inventory management first. Chaos doesn't scale.

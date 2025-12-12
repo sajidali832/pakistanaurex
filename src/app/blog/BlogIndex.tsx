@@ -64,10 +64,20 @@ export function BlogIndex({ posts }: { posts: BlogPost[] }) {
                     {filteredPosts.map((post) => (
                         <Link key={post.slug} href={`/blog/${post.slug}`} className="group">
                             <Card className="h-full flex flex-col overflow-hidden border-border/50 hover:shadow-lg transition-all duration-300 group-hover:-translate-y-1">
-                                {/* Fallback pattern / Image placeholder */}
-                                <div className="h-48 bg-gradient-to-br from-primary/5 to-secondary/20 relative overflow-hidden flex items-center justify-center">
-                                    <div className="absolute inset-0 bg-grid-slate-900/[0.04] bg-[bottom_1px_center] dark:bg-grid-slate-400/[0.05]" style={{ maskImage: 'linear-gradient(to bottom, transparent, black)' }} />
-                                    <span className="bg-background/80 backdrop-blur text-xs font-semibold px-3 py-1 rounded-full border shadow-sm z-10">
+                                {/* Image or Fallback */}
+                                <div className="h-48 relative overflow-hidden bg-muted">
+                                    {post.image ? (
+                                        <img 
+                                            src={post.image} 
+                                            alt={post.title} 
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-gradient-to-br from-primary/5 to-secondary/20 relative flex items-center justify-center">
+                                            <div className="absolute inset-0 bg-grid-slate-900/[0.04] bg-[bottom_1px_center] dark:bg-grid-slate-400/[0.05]" style={{ maskImage: 'linear-gradient(to bottom, transparent, black)' }} />
+                                        </div>
+                                    )}
+                                    <span className="absolute top-4 right-4 bg-background/80 backdrop-blur text-xs font-semibold px-3 py-1 rounded-full border shadow-sm z-10">
                                         {post.category}
                                     </span>
                                 </div>
