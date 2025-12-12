@@ -79,10 +79,13 @@ function ExportContent({ id }: { id: string }) {
 
   const fetchData = async () => {
     try {
+      const token = localStorage.getItem('bearer_token');
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+
       const [invoiceRes, linesRes, companiesRes] = await Promise.all([
-        fetch(`/api/invoices?id=${id}`),
-        fetch(`/api/invoice-lines?invoiceId=${id}`),
-        fetch('/api/companies'),
+        fetch(`/api/invoices?id=${id}`, { headers }),
+        fetch(`/api/invoice-lines?invoiceId=${id}`, { headers }),
+        fetch('/api/companies', { headers }),
       ]);
 
       const invoiceData = await invoiceRes.json();
@@ -94,7 +97,7 @@ function ExportContent({ id }: { id: string }) {
       setCompany(Array.isArray(companiesData) ? companiesData[0] : null);
 
       if (invoiceData?.clientId) {
-        const clientRes = await fetch(`/api/clients?id=${invoiceData.clientId}`);
+        const clientRes = await fetch(`/api/clients?id=${invoiceData.clientId}`, { headers });
         const clientData = await clientRes.json();
         setClient(clientData);
       }

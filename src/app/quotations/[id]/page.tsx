@@ -95,10 +95,13 @@ function QuotationDetailContent({ id }: { id: string }) {
 
   const fetchData = async () => {
     try {
+      const token = localStorage.getItem('bearer_token');
+      const headers: HeadersInit = token ? { 'Authorization': `Bearer ${token}` } : {};
+
       const [quotationRes, linesRes, companiesRes] = await Promise.all([
-        fetch(`/api/quotations?id=${id}`),
-        fetch(`/api/quotation-lines?quotationId=${id}`),
-        fetch('/api/companies'),
+        fetch(`/api/quotations?id=${id}`, { headers }),
+        fetch(`/api/quotation-lines?quotationId=${id}`, { headers }),
+        fetch('/api/companies', { headers }),
       ]);
 
       const quotationData = await quotationRes.json();
@@ -110,7 +113,7 @@ function QuotationDetailContent({ id }: { id: string }) {
       setCompany(Array.isArray(companiesData) ? companiesData[0] : null);
 
       if (quotationData?.clientId) {
-        const clientRes = await fetch(`/api/clients?id=${quotationData.clientId}`);
+        const clientRes = await fetch(`/api/clients?id=${quotationData.clientId}`, { headers });
         const clientData = await clientRes.json();
         setClient(clientData);
       }
@@ -123,9 +126,13 @@ function QuotationDetailContent({ id }: { id: string }) {
 
   const updateStatus = async (status: string) => {
     try {
+      const token = localStorage.getItem('bearer_token');
       await fetch(`/api/quotations?id=${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({ status }),
       });
       setQuotation(prev => prev ? { ...prev, status } : null);
@@ -139,13 +146,19 @@ function QuotationDetailContent({ id }: { id: string }) {
     setConverting(true);
 
     try {
+      const token = localStorage.getItem('bearer_token');
+      const headers: HeadersInit = { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      };
+      
       const year = new Date().getFullYear();
       const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
       const invoiceNumber = `INV-${year}-${random}`;
 
       const invoiceRes = await fetch('/api/invoices', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           companyId: quotation.companyId,
           clientId: quotation.clientId,
@@ -167,15 +180,15 @@ function QuotationDetailContent({ id }: { id: string }) {
       for (const line of lines) {
         await fetch('/api/invoice-lines', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({
             invoiceId: invoice.id,
             itemId: null,
             description: line.description,
             quantity: line.quantity,
             unitPrice: line.unitPrice,
-            taxRate: line.taxRate,
-            taxAmount: line.taxAmount,
+            taxRate: (line as any).taxRate || 0,
+            taxAmount: (line as any).taxAmount || 0,
             lineTotal: line.lineTotal,
             sortOrder: 0,
           }),
@@ -184,7 +197,7 @@ function QuotationDetailContent({ id }: { id: string }) {
 
       await fetch(`/api/quotations?id=${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ status: 'converted', convertedInvoiceId: invoice.id }),
       });
 

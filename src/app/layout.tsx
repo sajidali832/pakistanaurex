@@ -8,38 +8,97 @@ import Script from "next/script";
 
 export const metadata: Metadata = {
   title: {
-    default: "Aurex - Smart Business Management for Growing Enterprises",
-    template: "%s | Aurex"
+    default: "Aurex - Best Free Invoice Software & Business Management for Pakistan SMBs",
+    template: "%s | Aurex - Free Invoice & Quotation Software Pakistan"
   },
-  description: "Simplify your business finances with Aurex. Professional invoicing, expense tracking, inventory management, and CRM tools designed for modern businesses.",
-  keywords: ["business management", "invoicing software", "accounting tool", "inventory management", "CRM", "expense tracking", "financial reporting", "small business software", "Aurex", "billing software"],
+  description: "Aurex is the #1 free invoicing software for Pakistani businesses. Create professional invoices, quotations, tax invoices (FBR compliant), manage clients & track payments. Best billing software for SMBs in Karachi, Lahore, Islamabad. Free invoice generator with GST/Sales Tax support.",
+  keywords: [
+    "free invoice software pakistan",
+    "invoice generator pakistan",
+    "billing software karachi",
+    "quotation software lahore",
+    "invoice maker islamabad",
+    "FBR tax invoice software",
+    "GST invoice pakistan",
+    "sales tax invoice generator",
+    "free billing software SMB",
+    "small business invoicing",
+    "professional invoice template",
+    "quotation maker free",
+    "client management software",
+    "accounting software pakistan",
+    "business management software",
+    "invoice software free download",
+    "online invoice generator",
+    "best invoicing app pakistan",
+    "free invoice template pakistan",
+    "Aurex invoicing",
+    "create invoice online free",
+    "send invoice pakistan",
+    "invoice tracking software",
+    "payment tracking app",
+    "expense management pakistan",
+    "CRM software pakistan",
+    "inventory management",
+    "financial reporting tool",
+    "cloud accounting software",
+    "invoice software for freelancers",
+    "contractor invoice software",
+    "professional billing system",
+    "recurring invoice software",
+    "invoice automation",
+    "digital invoice pakistan",
+    "e-invoicing pakistan",
+    "STRN invoice generator",
+    "NTN invoice software",
+    "business invoice creator"
+  ],
   authors: [{ name: "Aurex Team" }],
   creator: "Aurex",
   publisher: "Aurex",
   metadataBase: new URL('https://aurex.sbs'),
   alternates: {
     canonical: '/',
+    languages: {
+      'en': '/',
+      'ur': '/?lang=ur',
+    }
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: 'verification_token',
   },
   openGraph: {
     type: "website",
-    locale: "en_US",
-    url: "https://aurex.company",
-    title: "Aurex - Smart Business Management",
-    description: "The all-in-one platform for invoicing, inventory, and client management. Start growing your business today.",
+    locale: "en_PK",
+    alternateLocale: ["ur_PK", "en_US"],
+    url: "https://aurex.sbs",
+    title: "Aurex - Free Invoice & Quotation Software for Pakistan",
+    description: "Create professional invoices, quotations & tax invoices for free. Best billing software for Pakistani SMBs. FBR compliant, GST support, client management & more.",
     siteName: "Aurex",
     images: [
       {
-        url: "/og-image.jpg", // We should probably create this or use a placeholder
+        url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Aurex Dashboard",
+        alt: "Aurex - Professional Invoice Software Dashboard",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Aurex - Business Management Simplified",
-    description: "Manage invoices, clients, and expenses in one place. Try Aurex for free.",
+    title: "Aurex - #1 Free Invoice Software Pakistan",
+    description: "Create professional invoices & quotations for free. Best billing software for Pakistani businesses. Start now!",
     images: ["/og-image.jpg"],
     creator: "@aurex",
   },
@@ -58,6 +117,8 @@ export const metadata: Metadata = {
       { url: "/icons/icon-192x192.svg", sizes: "192x192", type: "image/svg+xml" },
     ],
   },
+  category: 'Business Software',
+  classification: 'Invoice Software, Accounting Software, Business Management',
 };
 
 export const viewport: Viewport = {

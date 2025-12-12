@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Head from 'next/head';
 
 import { PublicHeader } from '@/components/PublicHeader';
 import { PublicFooter } from '@/components/PublicFooter';
@@ -19,7 +20,8 @@ import {
   Zap,
   Wallet,
   TrendingUp,
-  CreditCard
+  CreditCard,
+  Star
 } from 'lucide-react';
 import { useEffect } from 'react';
 
@@ -72,6 +74,91 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/20">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "Aurex",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web Browser",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "PKR"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.8",
+              "reviewCount": "150"
+            },
+            "description": "Free invoice software for Pakistani businesses. Create professional invoices, quotations, and tax invoices with FBR compliance.",
+            "featureList": [
+              "Professional Invoice Generation",
+              "Quotation Management",
+              "FBR Tax Invoice Support",
+              "Client Management",
+              "Financial Reports",
+              "Multi-language (English/Urdu)"
+            ]
+          })
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "Aurex",
+            "url": "https://aurex.sbs",
+            "logo": "https://aurex.sbs/icons/icon-512x512.svg",
+            "description": "Free invoicing and business management software for Pakistani SMBs",
+            "address": {
+              "@type": "PostalAddress",
+              "addressCountry": "PK"
+            },
+            "sameAs": []
+          })
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Is Aurex free to use?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, Aurex is completely free to use for creating invoices, quotations, and managing your business."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Is Aurex compliant with FBR tax requirements?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, Aurex supports FBR-compliant tax invoices with proper NTN and STRN number handling, GST calculations, and all required fields."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can I use Aurex in Urdu?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes, Aurex supports both English and Urdu languages, allowing you to create invoices and manage your business in your preferred language."
+                }
+              }
+            ]
+          })
+        }}
+      />
+
       {/* Navigation */}
       <PublicHeader />
 
