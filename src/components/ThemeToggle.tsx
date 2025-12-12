@@ -12,10 +12,11 @@ import {
 import { Moon, Sun, Monitor } from 'lucide-react';
 
 interface ThemeToggleProps {
-  variant?: 'button' | 'dropdown';
+  variant?: 'button' | 'dropdown' | 'minimal';
+  className?: string;
 }
 
-export function ThemeToggle({ variant = 'dropdown' }: ThemeToggleProps) {
+export function ThemeToggle({ variant = 'dropdown', className = '' }: ThemeToggleProps) {
   const { theme, setTheme, resolvedTheme } = useTheme();
 
   const iconVariants = {
@@ -23,6 +24,49 @@ export function ThemeToggle({ variant = 'dropdown' }: ThemeToggleProps) {
     animate: { scale: 1, rotate: 0, opacity: 1 },
     exit: { scale: 0, rotate: 180, opacity: 0 },
   };
+
+  if (variant === 'minimal') {
+    const cycleTheme = () => {
+      if (theme === 'light') setTheme('dark');
+      else if (theme === 'dark') setTheme('system');
+      else setTheme('light');
+    };
+
+    return (
+      <motion.button
+        onClick={cycleTheme}
+        className={`relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors ${className}`}
+        whileTap={{ scale: 0.9 }}
+      >
+        <AnimatePresence mode="wait" initial={false}>
+          {resolvedTheme === 'dark' ? (
+            <motion.div
+              key="moon"
+              variants={iconVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <Moon className="h-4 w-4 text-foreground" />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="sun"
+              variants={iconVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <Sun className="h-4 w-4 text-foreground" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <span className="sr-only">Toggle theme</span>
+      </motion.button>
+    );
+  }
 
   if (variant === 'button') {
     const cycleTheme = () => {
