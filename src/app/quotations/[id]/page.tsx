@@ -74,9 +74,8 @@ interface Company {
   strnNumber: string;
 }
 
-import { generateQuotationDoc } from '@/lib/generateQuotationDoc';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 function QuotationDetailContent({ id }: { id: string }) {
   const { t, language } = useI18n();
@@ -272,8 +271,7 @@ function QuotationDetailContent({ id }: { id: string }) {
       `PKR ${line.lineTotal.toLocaleString()}`
     ]);
 
-    // @ts-ignore - jspdf-autotable extends jsPDF
-    doc.autoTable({
+    autoTable(doc, {
       startY: 95,
       head: [['#', 'Description', 'Qty', 'Unit Price', 'Total']],
       body: tableData,
@@ -293,17 +291,16 @@ function QuotationDetailContent({ id }: { id: string }) {
       }
     });
 
-    // @ts-ignore
-    const finalY = doc.lastAutoTable.finalY + 10;
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
 
     // Totals
     doc.setFontSize(10);
     doc.text('Subtotal:', 130, finalY);
-    doc.text(`PKR ${quotation.subtotal.toLocaleString()}`, 160, finalY, { align: 'right' });
+    doc.text(`PKR ${quotation.subtotal.toLocaleString()}`, 190, finalY, { align: 'right' });
 
     if (quotation.discountAmount > 0) {
       doc.text('Discount:', 130, finalY + 7);
-      doc.text(`-PKR ${quotation.discountAmount.toLocaleString()}`, 160, finalY + 7, { align: 'right' });
+      doc.text(`-PKR ${quotation.discountAmount.toLocaleString()}`, 190, finalY + 7, { align: 'right' });
     }
 
     const lineOffset = quotation.discountAmount > 0 ? 11 : 4;
@@ -313,7 +310,7 @@ function QuotationDetailContent({ id }: { id: string }) {
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.text('Grand Total:', 130, finalY + lineOffset + 8);
-    doc.text(`PKR ${quotation.total.toLocaleString()}`, 160, finalY + lineOffset + 8, { align: 'right' });
+    doc.text(`PKR ${quotation.total.toLocaleString()}`, 190, finalY + lineOffset + 8, { align: 'right' });
 
     // Terms
     if (quotation.terms) {
